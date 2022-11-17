@@ -1,0 +1,2 @@
+tk
+psycopg2-binary

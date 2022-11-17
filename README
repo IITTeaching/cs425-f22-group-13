@@ -1,0 +1,5 @@
+To Run the App:
+1. use "make" to view all make commands
+2. use "make install" to install dependencies
+3. use "make install-{YOUR_OPERATING_SYSTEM}" to install tkinter 
+4. use "make run" to run application
