@@ -1,12 +1,22 @@
-CREATE DATABASE banksystem;
+DROP TABLE IF EXISTS Branches CASCADE;
+DROP TABLE IF EXISTS Customers CASCADE;
+DROP TABLE IF EXISTS Employees CASCADE;
+DROP TABLE IF EXISTS Account CASCADE;
+DROP TABLE IF EXISTS Owns CASCADE;
+DROP TABLE IF EXISTS Transactions CASCADE;
+DROP ROLE IF EXISTS teller;
+DROP ROLE IF EXISTS manager;
+DROP ROLE IF EXISTS customer;
+DROP USER IF EXISTS bob;
+DROP USER IF EXISTS john;
+DROP USER IF EXISTS sam;
+
 
 
 CREATE TABLE Branches
- (
+(
 Address VARCHAR(20),
-
-
-PRIMARY KEY (Address),
+PRIMARY KEY (Address)
 );
 
 CREATE TABLE Customers
@@ -18,8 +28,7 @@ HomeBranch VARCHAR(20),
 
 
 PRIMARY KEY (SSN),
-FOREIGN KEY (HomeBranch) REFERENCES Branches(Address);
-FOREIGN KEY (SSN) REFERENCES Owns(SSN);
+FOREIGN KEY (HomeBranch) REFERENCES Branches(Address)
 );
 
 CREATE TABLE Employees
@@ -69,22 +78,30 @@ DepositAccountID CHAR(10),
 WithdrawalAccountID CHAR(10),
  
 PRIMARY KEY (ID),
-FOREIGN KEY (DepositAccountID, WithdrawalAccountID) REFERENCES Account(Number)
+FOREIGN KEY (DepositAccountID) REFERENCES Account(NUMBER),
+FOREIGN KEY (WithdrawalAccountID) REFERENCES Account(Number)
 );
-
-
 
 
 CREATE role teller;
 GRANT SELECT on Account TO teller;
-GRANT SELECT on Transaction TO teller
-GRANT UPDATE on Transaction;
+GRANT SELECT on Transactions TO teller;
+GRANT UPDATE on Transactions TO teller;
 
 
 CREATE role manager;
-GRANT ALL PRIVILEGES ON ALL TABLES TO manager; 
-GRANT ALL PRIVILEGES ON ALL SEQUENCES TO manager;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO manager;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO manager;
 
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
+
+CREATE USER bob WITH LOGIN PASSWORD 'password123';
+GRANT manager TO bob;
+
+CREATE USER john WITH LOGIN PASSWORD 'password456';
+GRANT teller TO john;
+
+CREATE USER sam WITH LOGIN PASSWORD 'password789';
+GRANT customer TO sam;

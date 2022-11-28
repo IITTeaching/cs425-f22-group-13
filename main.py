@@ -1,6 +1,12 @@
 import tkinter as tk
-#import psycopg2
+import psycopg2
 
+
+
+#       conn = psycopg2.connect("dbname=bank user=bob password=password123")
+#  cur = conn.cursor()
+#  cur.execute("SELECT * FROM branches;")
+#  print(cur.fetchone())
 class MainFrame(tk.Tk):
     #Frame object holding all pages
     def __init__(self, *args, **kwargs):
