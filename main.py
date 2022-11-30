@@ -47,6 +47,51 @@ class MainFrame(tk.Tk):
         self.customers = cust
         cur.close()
         conn.close()
+    def get_teller_acc(self):
+        conn = psycopg2.connect("dbname=bank user=john password=password456")
+        cur = conn.cursor()
+        cur.execute("SELECT number FROM Account;")
+        accounts = cur.fetchall()
+        cur.close()
+        conn.close()
+        return accounts
+    def choose_acc(self, transfer):
+        acc = self.get_teller_acc()
+        print(acc)
+        if transfer is 'transfer':
+            print('in transfer')
+            label1 = tk.Label(self, text='Choose account to take money from')
+            label1.pack()
+            options = []
+            for i in acc:
+                for x in i:
+                    print(x)
+                    options.append(x)
+            # datatype of menu text
+            clicked = tk.StringVar()
+            # initial menu text
+            clicked.set(options[0])
+
+                    # Create Dropdown menu
+            drop = tk.OptionMenu( self , clicked , *options )
+            drop.pack()
+
+            label2 = tk.Label(self, text='Choose account to transfer to')
+            label2.pack()
+            clicked1 = tk.StringVar()
+
+                    # initial menu text
+            clicked1.set(options[1])
+
+                    # Create Dropdown menu
+            drop = tk.OptionMenu( self , clicked , *options )
+            drop.pack()
+            confirm_btn = tk.Button(self, text='Confirm')
+        elif transfer is 'external':
+            print('')
+        else:
+            print('')
+
         
     def up_frame(self, page_name):
         page = self.listing[page_name]
@@ -131,6 +176,10 @@ class TellerLogin(tk.Frame):
                 btn.pack_forget()
                 controller.destroy()
                 controller.__init__()
+            def to_transaction():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                choose_transaction()
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -138,11 +187,38 @@ class TellerLogin(tk.Frame):
             label2 = tk.Label(self, text = "What would you like to do?")
             label2.pack()
 
-            to_transaction = tk.Button(self, text = "Make Transaction")
-            to_transaction.pack()
+            to_transaction_btn = tk.Button(self, text = "Make Transaction", command=to_transaction)
+            to_transaction_btn.pack()
 
             btn= tk.Button(self, text="Logout", command=back)
-            btn.pack()
+            btn.pack(side="bottom")
+        ###TODO Refactor the bellow functions/pages into main frame so that it can be used by teller and customer
+        def choose_transaction():
+            def hide_all():
+                label.pack_forget()
+                withdraw_btn.pack_forget()
+                deposite_btn.pack_forget()
+                transfer_btn.pack_forget()
+                external_transfer_btn.pack_forget()
+                controller.choose_acc('transfer')      
+
+            label = tk.Label(self, text='What kind of transaction would you like to make?')
+            label.pack()
+            
+            withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all)
+            withdraw_btn.pack()
+
+            deposite_btn = tk.Button(self, text='Make Deposite')
+            deposite_btn.pack()
+
+            transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all())
+            transfer_btn.pack()
+
+            external_transfer_btn = tk.Button(self, text='External Transfer')
+            external_transfer_btn.pack()
+
+
+
 
 
 
