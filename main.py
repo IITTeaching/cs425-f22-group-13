@@ -39,7 +39,6 @@ class MainFrame(tk.Tk):
         self.tellers = tellers
         cur.execute("SELECT name FROM Employees WHERE type = 'Manager';")
         managers = cur.fetchall()
-        print('man')
         print(managers)
         self.managers = managers
         cur.execute("SELECT name FROM Customers;")

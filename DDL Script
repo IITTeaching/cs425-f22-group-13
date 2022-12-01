@@ -127,6 +127,7 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO manager;
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
+GRANT INSERT ON Transactions To customer;
 
 
 
