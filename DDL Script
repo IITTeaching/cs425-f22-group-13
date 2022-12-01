@@ -12,7 +12,6 @@ DROP USER IF EXISTS john;
 DROP USER IF EXISTS sam;
 
 
-
 CREATE TABLE Branches
 (
 Address VARCHAR(20),
@@ -118,18 +117,17 @@ GRANT SELECT on Account TO teller;
 GRANT UPDATE on Account TO Teller;
 GRANT SELECT on Transactions TO teller;
 GRANT INSERT on Transactions TO teller;
+GRANT SELECT on Transaction TO teller;
+GRANT UPDATE on Transaction TO teller;
 
 
 CREATE role manager;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO manager;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO manager;
+GRANT ALL PRIVILEGES ON ALL test TO manager; 
 
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
 GRANT INSERT ON Transactions To customer;
-
-
 
 CREATE USER bob WITH LOGIN PASSWORD 'password123';
 GRANT manager TO bob;
@@ -139,3 +137,7 @@ GRANT teller TO john;
 
 CREATE USER sam WITH LOGIN PASSWORD 'password789';
 GRANT customer TO sam;
+
+
+
+
