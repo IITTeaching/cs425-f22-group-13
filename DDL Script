@@ -4,6 +4,12 @@ DROP TABLE IF EXISTS Employees CASCADE;
 DROP TABLE IF EXISTS Account CASCADE;
 DROP TABLE IF EXISTS Owns CASCADE;
 DROP TABLE IF EXISTS Transactions CASCADE;
+DROP ROLE IF EXISTS teller;
+DROP ROLE IF EXISTS manager;
+DROP ROLE IF EXISTS customer;
+DROP USER IF EXISTS bob;
+DROP USER IF EXISTS john;
+DROP USER IF EXISTS sam;
 
 
 CREATE TABLE Branches
@@ -108,6 +114,9 @@ INSERT INTO Transactions VALUES ('Deposit', '20000.00', 'ATM deposit.', '4445782
 
 CREATE role teller;
 GRANT SELECT on Account TO teller;
+GRANT UPDATE on Account TO Teller;
+GRANT SELECT on Transactions TO teller;
+GRANT INSERT on Transactions TO teller;
 GRANT SELECT on Transaction TO teller;
 GRANT UPDATE on Transaction TO teller;
 
@@ -118,6 +127,17 @@ GRANT ALL PRIVILEGES ON ALL test TO manager;
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
+GRANT INSERT ON Transactions To customer;
+
+CREATE USER bob WITH LOGIN PASSWORD 'password123';
+GRANT manager TO bob;
+
+CREATE USER john WITH LOGIN PASSWORD 'password456';
+GRANT teller TO john;
+
+CREATE USER sam WITH LOGIN PASSWORD 'password789';
+GRANT customer TO sam;
+
 
 
 

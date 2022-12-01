@@ -1,6 +1,7 @@
 import tkinter as tk
 import psycopg2
-
+from decimal import Decimal
+import random
 
 
 #        conn = psycopg2.connect("dbname=bank user=bob password=password123")
@@ -16,7 +17,6 @@ class MainFrame(tk.Tk):
 
         container = tk.Frame(self)
         container.pack(fill='both', expand=1)
-        cont = container
         self.get_initial_data()
 
         self.listing = {}
@@ -37,9 +37,8 @@ class MainFrame(tk.Tk):
         tellers = cur.fetchall()
         print(tellers)
         self.tellers = tellers
-        cur.execute("SELECT name FROM Employees WHERE type = 'manager';")
+        cur.execute("SELECT name FROM Employees WHERE type = 'Manager';")
         managers = cur.fetchall()
-        print('man')
         print(managers)
         self.managers = managers
         cur.execute("SELECT name FROM Customers;")
@@ -47,6 +46,7 @@ class MainFrame(tk.Tk):
         self.customers = cust
         cur.close()
         conn.close()
+
     def get_teller_acc(self):
         conn = psycopg2.connect("dbname=bank user=john password=password456")
         cur = conn.cursor()
@@ -55,40 +55,115 @@ class MainFrame(tk.Tk):
         cur.close()
         conn.close()
         return accounts
+        
     def choose_acc(self, transfer):
+        def loop(a):
+            print(a)
+            for i in a:
+                for x in i:
+                    return x
+        def get_trans_id():
+            id = ''
+            for i in range(0, 20):
+                id += str(random.randint(0, 9))
+            return id
+
+
+        incor_inp = tk.Label(self, text='', fg="red")
+        success_msg = tk.Label(self, text='',fg="green")
+        def Take_input():
+            if bool(success_msg.winfo_ismapped()) == True:
+                success_msg.config(text='')
+            if bool(incor_inp.winfo_ismapped()) == True:
+                print('err = true')
+                incor_inp.config(text="")
+            INPUT = inputtxt.get("1.0", "end-1c")
+            print(INPUT)
+            if(INPUT.isdecimal() == False):
+                incor_inp.pack()
+                incor_inp.place(x=200, y=200)
+                incor_inp.config(text='Incorrect Input, please make sure you entered a number')
+            else:
+                conn = psycopg2.connect("dbname=bank user=john password=password456")
+                cur = conn.cursor()
+                get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
+                cur.execute(get_curr_bal)
+                x = loop(cur.fetchall())
+                newVal = x-Decimal(INPUT)
+                update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                cur.execute(update_val)
+                conn.commit()
+                get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
+                cur.execute(get_curr_bal_2)
+                y = loop(cur.fetchall())
+                new_bal = y+Decimal(INPUT)
+                update_bal ="UPDATE Account SET balance=" + str(new_bal) + " WHERE number = '" + clicked1.get() + "';"
+                cur.execute(update_bal)
+                conn.commit()
+                trans_id = get_trans_id()
+                desc = "'Trasnfered money'"
+                update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ")"
+                print(update_transaction_comm)
+                cur.execute(update_transaction_comm)
+                success_msg.pack()
+                success_msg.place(x=265,y=200)
+                success_msg.config(text="Successfully transfered money!")
+
+                conn.commit()
+                cur.close()
+                conn.close()
         acc = self.get_teller_acc()
         print(acc)
-        if transfer is 'transfer':
-            print('in transfer')
-            label1 = tk.Label(self, text='Choose account to take money from')
-            label1.pack()
-            options = []
-            for i in acc:
-                for x in i:
-                    print(x)
-                    options.append(x)
-            # datatype of menu text
-            clicked = tk.StringVar()
+        options = []
+        for i in acc:
+            for x in i:
+                print(x)
+                options.append(x)
+                    # datatype of menu text
+        clicked = tk.StringVar()
             # initial menu text
-            clicked.set(options[0])
+        clicked.set(options[0])
 
                     # Create Dropdown menu
-            drop = tk.OptionMenu( self , clicked , *options )
-            drop.pack()
+        drop = tk.OptionMenu( self , clicked , *options )
+        drop.pack()
+        drop.place(x=325,y=45)
+        confirm_btn = tk.Button(self, text='Confirm', command= lambda: Take_input())
+        confirm_btn.pack()
+        confirm_btn.place(x=330, y=110)
+        amnt_label = tk.Label(self, text='')
+        amnt_label.pack()
 
-            label2 = tk.Label(self, text='Choose account to transfer to')
+        inputtxt = tk.Text(self, height = 1,
+            width = 10,
+            bg = "white",
+            fg="red")
+        inputtxt.pack()
+        inputtxt.place(x=333, y=120)
+        if transfer is 'transfer':
+            print('in transfer')
+            label1 = tk.Label(self, text='Choose account to take money from:')
+            label1.pack()
+            label1.place(x=270,y=20)
+            label2 = tk.Label(self, text='Choose account to transfer to:')
             label2.pack()
+            label2.place(x=270,y=70)
             clicked1 = tk.StringVar()
 
                     # initial menu text
             clicked1.set(options[1])
 
                     # Create Dropdown menu
-            drop = tk.OptionMenu( self , clicked , *options )
-            drop.pack()
-            confirm_btn = tk.Button(self, text='Confirm')
+            drop1 = tk.OptionMenu( self , clicked1 , *options )
+            drop1.pack()
+            drop1.place(x=325,y=90)
+            confirm_btn.place(x=330,y=160)
+            amnt_label.config(text='How much money would you like to transfer? Enter the amount as a decimal (ex: $50 = 50.00, $1000 = 1000.00')
+            amnt_label.place(x=50, y=110)
+            inputtxt.place(x=333, y=135)
         elif transfer is 'external':
             print('')
+
         else:
             print('')
 
