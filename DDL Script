@@ -28,7 +28,7 @@ HomeBranch VARCHAR(20),
 
 
 PRIMARY KEY (SSN),
-FOREIGN KEY (HomeBranch) REFERENCES Branches(Address)
+FOREIGN KEY (HomeBranch) REFERENCES Branches(Address) on delete cascade on update cascade
 );
 
 CREATE TABLE Employees
@@ -42,7 +42,7 @@ Salary DECIMAL(13,2),
 
 
 PRIMARY KEY (SSN),
-FOREIGN KEY (Branch) REFERENCES Branches(Address)
+FOREIGN KEY (Branch) REFERENCES Branches(Address) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Account
@@ -50,10 +50,8 @@ CREATE TABLE Account
 Number CHAR(10),
 Type VARCHAR(20),
 Balance DECIMAL(13,2),
-Owner CHAR(9),
  
-PRIMARY KEY (Number),
-FOREIGN KEY (Owner) REFERENCES Customers(SSN)
+PRIMARY KEY (Number)
 );
 
 
@@ -63,30 +61,63 @@ SSN CHAR(9),
 Number CHAR(10),
 
 
-PRIMARY KEY(SSN, NUMBER),
-FOREIGN KEY(Number) REFERENCES Account(Number),
-FOREIGN KEY(SSN) REFERENCES Customers(SSN)
+PRIMARY KEY(SSN, Number),
+FOREIGN KEY(Number) REFERENCES Account(Number) ON DELETE CASCADE ON UPDATE CASCADE,
+FOREIGN KEY(SSN) REFERENCES Customers(SSN) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Transactions
  (
 Type VARCHAR(20),
 Amount DECIMAL(13,2),
-Description VARCHAR(20),
+Description VARCHAR(50),
 ID CHAR(20),
 DepositAccountID CHAR(10),
 WithdrawalAccountID CHAR(10),
  
 PRIMARY KEY (ID),
-FOREIGN KEY (DepositAccountID) REFERENCES Account(NUMBER),
-FOREIGN KEY (WithdrawalAccountID) REFERENCES Account(Number)
+FOREIGN KEY (DepositAccountID) REFERENCES Account(Number) ON DELETE CASCADE ON UPDATE CASCADE,
+FOREIGN KEY (WithdrawalAccountID) REFERENCES Account(Number) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+
+INSERT INTO Branches VALUES ('123 Alpha St.');
+INSERT INTO Branches VALUES ('456 Bravo St.');
+INSERT INTO Branches VALUES ('789 Charlie St.');
+
+INSERT INTO Customers VALUES ('123456789', 'Adam', '141 Doris St.', '123 Alpha St.');
+INSERT INTO Customers VALUES ('987654321', 'Bart', '577 Edmund Dr.', '123 Alpha St.');
+INSERT INTO Customers VALUES ('135798642', 'Carl', '900 Festle Ln.', '789 Charlie St.');
+
+INSERT INTO Employees VALUES ('282839390', 'Gomez', '743 Jose St.', '123 Alpha St.', 'Manager', '25000.00');
+INSERT INTO Employees VALUES ('432897344', 'Hugo', '284 Keppler Ln.', '456 Bravo St.', 'Teller', '12000.00');
+INSERT INTO Employees VALUES ('109256723', 'Inigo', '923 Lemon St.', '789 Charlie St.', 'Teller', '10000.00');
+
+INSERT INTO Account VALUES ('8463293749', 'Checkings', '10.00');
+INSERT INTO Account VALUES ('4392342343', 'Savings', '999999.99');
+INSERT INTO Account VALUES ('1082338342', 'Checkings', '438743.33');
+INSERT INTO Account VALUES ('3456384344', 'Checkings', '250.55');
+INSERT INTO Account VALUES ('2398344343', 'Savings', '2.67');
+
+INSERT INTO Owns VALUES ('123456789', '8463293749');
+INSERT INTO Owns VALUES ('123456789', '4392342343');
+INSERT INTO Owns VALUES ('987654321', '4392342343');
+INSERT INTO Owns VALUES ('987654321', '1082338342');
+INSERT INTO Owns VALUES ('987654321', '3456384344');
+INSERT INTO Owns VALUES ('135798642', '2398344343');
+
+INSERT INTO Transactions VALUES ('Deposit', '500.00', 'Check from David Blythe.', '93484830230128374698', '8463293749', NULL);
+INSERT INTO Transactions VALUES ('Withdrawal', '4.77', 'Sandwhich from SandwhichShop.', '84343294034302942393', NULL, '1082338342');
+INSERT INTO Transactions VALUES ('Transfer', '100.00', 'Scheduled transfer.', '34689029327932477238', '1082338342', '3456384344');
+INSERT INTO Transactions VALUES ('External Transfer', '39.23', 'Scheduled transfer.', '25123871849334939423', NULL, '4392342343');
+INSERT INTO Transactions VALUES ('Deposit', '20000.00', 'ATM deposit.', '44457823888876233002', '3456384344', NULL);
 
 
 CREATE role teller;
 GRANT SELECT on Account TO teller;
+GRANT UPDATE on Account TO Teller;
 GRANT SELECT on Transactions TO teller;
-GRANT UPDATE on Transactions TO teller;
+GRANT INSERT on Transactions TO teller;
 
 
 CREATE role manager;
@@ -96,6 +127,8 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO manager;
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
+
+
 
 CREATE USER bob WITH LOGIN PASSWORD 'password123';
 GRANT manager TO bob;
