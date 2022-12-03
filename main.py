@@ -84,34 +84,62 @@ class MainFrame(tk.Tk):
                 incor_inp.place(x=200, y=200)
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
-                conn = psycopg2.connect("dbname=bank user=john password=password456")
-                cur = conn.cursor()
-                get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
-                cur.execute(get_curr_bal)
-                x = loop(cur.fetchall())
-                newVal = x-Decimal(INPUT)
-                update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
-                cur.execute(update_val)
-                conn.commit()
-                get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
-                cur.execute(get_curr_bal_2)
-                y = loop(cur.fetchall())
-                new_bal = y+Decimal(INPUT)
-                update_bal ="UPDATE Account SET balance=" + str(new_bal) + " WHERE number = '" + clicked1.get() + "';"
-                cur.execute(update_bal)
-                conn.commit()
-                trans_id = get_trans_id()
-                desc = "'Trasnfered money'"
-                update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ")"
-                print(update_transaction_comm)
-                cur.execute(update_transaction_comm)
-                success_msg.pack()
-                success_msg.place(x=265,y=200)
-                success_msg.config(text="Successfully transfered money!")
-
-                conn.commit()
-                cur.close()
-                conn.close()
+                if transfer == 'transfer':
+                    conn = psycopg2.connect("dbname=bank user=john password=password456")
+                    cur = conn.cursor()
+                    get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
+                    cur.execute(get_curr_bal)
+                    x = loop(cur.fetchall())
+                    newVal = x-Decimal(INPUT)
+                    update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                    cur.execute(update_val)
+                    conn.commit()
+                    get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
+                    cur.execute(get_curr_bal_2)
+                    y = loop(cur.fetchall())
+                    new_bal = y+Decimal(INPUT)
+                    update_bal ="UPDATE Account SET balance=" + str(new_bal) + " WHERE number = '" + clicked1.get() + "';"
+                    cur.execute(update_bal)
+                    conn.commit()
+                    trans_id = get_trans_id()
+                    desc = "'Trasnfered money'"
+                    update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ")"
+                    print(update_transaction_comm)
+                    cur.execute(update_transaction_comm)
+                    success_msg.pack()
+                    success_msg.place(x=265,y=200)
+                    success_msg.config(text="Successfully transfered money!")
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                elif transfer == 'external':
+                    ROUTNUM = routing_num.get("1.0", "end-1c")
+                    print(ROUTNUM)
+                    if ROUTNUM.isdecimal() == False:
+                        incor_inp.pack()
+                        incor_inp.place(x=200, y=200)
+                        incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
+                    else:
+                        conn = psycopg2.connect("dbname=bank user=john password=password456")
+                        cur = conn.cursor()
+                        get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
+                        cur.execute(get_curr_bal)
+                        x = loop(cur.fetchall())
+                        newVal = x-Decimal(INPUT)
+                        update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                        cur.execute(update_val)
+                        conn.commit()
+                        trans_id = get_trans_id()
+                        desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", null" + ")"
+                        print(update_transaction_comm)
+                        cur.execute(update_transaction_comm)
+                        success_msg.pack()
+                        success_msg.place(x=275,y=200)
+                        success_msg.config(text="Successfully transfered money!")
+                        conn.commit()
+                        cur.close()
+                        conn.close()
         acc = self.get_teller_acc()
         print(acc)
         options = []
@@ -158,11 +186,28 @@ class MainFrame(tk.Tk):
             drop1.pack()
             drop1.place(x=325,y=90)
             confirm_btn.place(x=330,y=160)
-            amnt_label.config(text='How much money would you like to transfer? Enter the amount as a decimal (ex: $50 = 50.00, $1000 = 1000.00')
-            amnt_label.place(x=50, y=110)
+            amnt_label.config(text='How much money would you like to transfer? Make sure your input is a number (ex: 50 or 50.00)')
+            amnt_label.place(x=70, y=110)
             inputtxt.place(x=333, y=135)
         elif transfer is 'external':
-            print('')
+            print('in external')
+            label1 = tk.Label(self, text='Choose account to take money from:')
+            label1.pack()
+            drop.place(x=310, y=45)
+            label1.place(x=270,y=20)
+            label2 = tk.Label(self, text='Enter routing number of account you would like to send money to')
+            label2.pack()
+            label2.place(x=200, y=70)
+            routing_num = tk.Text(self, height = 1,
+            width = 10,
+            bg = "white",
+            fg="red")
+            routing_num.pack()
+            routing_num.place(x=333, y=90)
+            amnt_label.config(text='How much money would you like to transfer? Make sure your input is a number (ex: 50 or 50.00)')
+            amnt_label.place(x=70, y=110)
+            inputtxt.place(x=333, y=130)
+            confirm_btn.place(x=330, y=150)
 
         else:
             print('')
@@ -269,27 +314,27 @@ class TellerLogin(tk.Frame):
             btn.pack(side="bottom")
         ###TODO Refactor the bellow functions/pages into main frame so that it can be used by teller and customer
         def choose_transaction():
-            def hide_all():
+            def hide_all(transaction):
                 label.pack_forget()
                 withdraw_btn.pack_forget()
                 deposite_btn.pack_forget()
                 transfer_btn.pack_forget()
                 external_transfer_btn.pack_forget()
-                controller.choose_acc('transfer')      
+                controller.choose_acc(transaction)      
 
             label = tk.Label(self, text='What kind of transaction would you like to make?')
             label.pack()
             
-            withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all)
+            withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
             withdraw_btn.pack()
 
             deposite_btn = tk.Button(self, text='Make Deposite')
             deposite_btn.pack()
 
-            transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all())
+            transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
             transfer_btn.pack()
 
-            external_transfer_btn = tk.Button(self, text='External Transfer')
+            external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
             external_transfer_btn.pack()
 
 
