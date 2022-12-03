@@ -89,8 +89,11 @@ INSERT INTO Customers VALUES ('987654321', 'Bart', '577 Edmund Dr.', '123 Alpha 
 INSERT INTO Customers VALUES ('135798642', 'Carl', '900 Festle Ln.', '789 Charlie St.');
 
 INSERT INTO Employees VALUES ('282839390', 'Gomez', '743 Jose St.', '123 Alpha St.', 'Manager', '25000.00');
+INSERT INTO Employees VALUES ('882746492', 'Janet', '455 Money St.', '456 Bravo St.', 'Manager', '30000.00');
+INSERT INTO Employees VALUES ('239842437', 'Lilla', '927 Nose St.', '789 Charlie St.', 'Manager', '40000.00');
 INSERT INTO Employees VALUES ('432897344', 'Hugo', '284 Keppler Ln.', '456 Bravo St.', 'Teller', '12000.00');
 INSERT INTO Employees VALUES ('109256723', 'Inigo', '923 Lemon St.', '789 Charlie St.', 'Teller', '10000.00');
+INSERT INTO Employees VALUES ('543673389', 'Kelly', '232 Opera St.', '123 Alpha St.', 'Teller', '10000.00');
 
 INSERT INTO Account VALUES ('8463293749', 'Checkings', '10.00');
 INSERT INTO Account VALUES ('4392342343', 'Savings', '999999.99');
@@ -117,13 +120,12 @@ GRANT SELECT on Account TO teller;
 GRANT UPDATE on Account TO Teller;
 GRANT SELECT on Transactions TO teller;
 GRANT INSERT on Transactions TO teller;
-GRANT SELECT on Transaction TO teller;
-GRANT UPDATE on Transaction TO teller;
+GRANT SELECT on Transactions TO teller;
+GRANT UPDATE on Transactions TO teller;
 
 
 CREATE role manager;
-GRANT ALL PRIVILEGES ON ALL test TO manager; 
-
+GRANT ALL ON ALL TABLES IN SCHEMA "public" TO manager;
 
 CREATE role customer;
 GRANT SELECT ON Account TO customer;
@@ -137,7 +139,3 @@ GRANT teller TO john;
 
 CREATE USER sam WITH LOGIN PASSWORD 'password789';
 GRANT customer TO sam;
-
-
-
-
