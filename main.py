@@ -21,7 +21,7 @@ class MainFrame(tk.Tk):
 
         self.listing = {}
 
-        for p in (LoginPage, EmployeePage, TellerLogin, CustomerLogin) :
+        for p in (LoginPage, EmployeePage, TellerLogin, ManagerLogin, CustomerLogin) :
             page_name = p.__name__
             frame = p(parent = container, controller = self)
             frame.place(relheight=1, relwidth=1)
@@ -31,7 +31,7 @@ class MainFrame(tk.Tk):
     managers = []
     customers = []
     def get_initial_data(self):
-        conn = psycopg2.connect("dbname=bank user=bob password=password123")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT name FROM Employees WHERE type = 'Teller';")
         tellers = cur.fetchall()
@@ -48,7 +48,7 @@ class MainFrame(tk.Tk):
         conn.close()
 
     def get_teller_acc(self):
-        conn = psycopg2.connect("dbname=bank user=john password=password456")
+        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -56,6 +56,7 @@ class MainFrame(tk.Tk):
         conn.close()
         return accounts
     
+
     def get_cust_acc(self, name):
         conn = psycopg2.connect("dbname=bank user=sam password=password789")
         cur = conn.cursor()
@@ -64,7 +65,70 @@ class MainFrame(tk.Tk):
         cur.close()
         conn.close()
         return accounts
+
+    def get_manager_acc(self):
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+        cur = conn.cursor()
+        cur.execute("SELECT number FROM Account;")
+        accounts = cur.fetchall()
+        cur.close()
+        conn.close()
+        return accounts
         
+    
+    def choose_ana(self, analytic):
+        success_msg = tk.Label(self, text='',fg="green")
+        if analytic == 'networth':
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = conn.cursor()
+            get_net = "SELECT SUM(Balance) AS sum FROM Account"
+            cur.execute(get_net)
+            net = cur.fetchall()
+            success_msg.pack()
+            success_msg.place(x=280, y=200)
+            success_msg.config(text="Total Net Worth: " + str(net[0][0]))
+            # success_msg.config(text=net)
+            conn.commit()
+            cur.close()
+            conn.close()
+        elif analytic == 'mean':
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = conn.cursor()
+            get_avg = "SELECT AVG(Balance) AS mean FROM Account"
+            cur.execute(get_avg)
+            mean = cur.fetchall()
+            success_msg.pack()
+            success_msg.place(x=255, y=200)
+            success_msg.config(text="Mean of Balances: " + str(mean[0][0]))
+            conn.commit()
+            cur.close()
+            conn.close()
+        elif analytic == 'mostvaluable': #SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = conn.cursor()
+            get_mst = "SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1"
+            cur.execute(get_mst)
+            mst = cur.fetchall()
+            success_msg.pack()
+            success_msg.place(x=200, y=200)
+            success_msg.config(text="Most Valuable Account: " + str(mst[0][0]) + " with a balance of " + str(mst[0][1]))
+            conn.commit()
+            cur.close()
+            conn.close()
+        elif analytic == 'leastvaluable':
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = conn.cursor()
+            get_lst = "SELECT Number,Balance FROM Account ORDER BY Balance ASC LIMIT 1"
+            cur.execute(get_lst)
+            lst = cur.fetchall()
+            success_msg.pack()
+            success_msg.place(x=200, y=200)
+            success_msg.config(text="Least Valuable Account: " + str(lst[0][0]) + " with a balance of " + str(lst[0][1]))
+            conn.commit()
+            cur.close()
+            conn.close()
+    
+    
     def choose_acc(self, transfer, loggedInAcc, loggedInAs):
         def loop(a):
             print(a)
@@ -94,7 +158,7 @@ class MainFrame(tk.Tk):
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 if transfer == 'transfer':
-                    conn = psycopg2.connect("dbname=bank user=john password=password456")
+                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
@@ -129,7 +193,7 @@ class MainFrame(tk.Tk):
                         incor_inp.place(x=200, y=200)
                         incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
                     else:
-                        conn = psycopg2.connect("dbname=bank user=john password=password456")
+                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                         cur = conn.cursor()
                         get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                         cur.execute(get_curr_bal)
@@ -184,6 +248,8 @@ class MainFrame(tk.Tk):
            acc = self.get_teller_acc()
         else:
             acc = self.get_cust_acc(loggedInAs)
+                
+        acc = self.get_teller_acc()
         print(acc)
         options = []
         for i in acc:
@@ -251,6 +317,8 @@ class MainFrame(tk.Tk):
             amnt_label.place(x=70, y=110)
             inputtxt.place(x=333, y=130)
             confirm_btn.place(x=330, y=150)
+        elif transfer in ['networth', 'mean', 'mostvaluable', 'leastvaluable']:
+            print('in ' + transfer)
 
         else:
             print('')
@@ -298,7 +366,7 @@ class EmployeePage(tk.Frame):
         to_loan = tk.Button(self, text="Loan Specialist")
         to_loan.pack()
 
-        to_manager = tk.Button(self, text="Manager")
+        to_manager = tk.Button(self, text="Manager", command=lambda: controller.up_frame("ManagerLogin"))
         to_manager.pack()
 
         to_login = tk.Button(self, text = "Back to Login Page", command=lambda: controller.up_frame("LoginPage"))
@@ -473,7 +541,86 @@ class CustomerLogin(tk.Frame):
 
             external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
             external_transfer_btn.pack()
+            
+class ManagerLogin(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        logged_in_as = ""
+        # Hide the dropdown/button and replace with new properties (did this instead of creating a whole new page as this was easier)
+        def show():
+            drop.pack_forget()
+            btn.pack_forget()
+            print(clicked.get())
+            logged_in_text = "Welcome Back " + clicked.get()
+            print(logged_in_text)
+            logged_in(logged_in_text)
 
+        # Dropdown menu options
+        print('in manager page')            
+        options = []
+        for i in controller.managers:
+            for x in i:
+                print(x)
+                options.append(x)
+        print(options)
+
+        # datatype of menu text
+        clicked = tk.StringVar()
+
+        # initial menu text
+        clicked.set(options[0])
+
+        # Create Dropdown menu
+        drop = tk.OptionMenu( self , clicked , *options )
+        drop.pack()
+
+        # Create button, it will change label text
+        btn = tk.Button( self , text = "Login" , command = show )
+        btn.pack()
+
+        def logged_in(logged_in_text):
+            #this method is used to "logout", the easiest way I could think to do it was to delete the current tkinter instance and create a new one
+            def back():
+                label.pack_forget()
+                label2.pack_forget()
+                btn.pack_forget()
+                controller.destroy()
+                controller.__init__()
+            def to_analytics():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                choose_analytics()
+            print('in logged in')
+            print(logged_in_text)
+            label = tk.Label(self, text = logged_in_text)
+            label.pack()
+            label2 = tk.Label(self, text = "What would you like to do?")
+            label2.pack()
+
+            to_transaction_btn = tk.Button(self, text = "Analytics", command=to_analytics)
+        def choose_analytics():
+            def analyt(analytic):
+                label.pack_forget()
+                networth_btn.pack_forget()
+                mean_btn.pack_forget()
+                mostvaluable_btn.pack_forget()
+                leastvaluable_btn.pack_forget()
+                controller.choose_ana(analytic)      
+
+            label = tk.Label(self, text='What kind of data would you like to view?')
+            label.pack()
+            
+            networth_btn = tk.Button(self, text='Total net worth of all customers', command=lambda: analyt('networth'))
+            networth_btn.pack()
+
+            mean_btn = tk.Button(self, text='Mean balance for all customers', command=lambda: analyt('mean'))
+            mean_btn.pack()
+
+            mostvaluable_btn = tk.Button(self, text='Most valuable account', command=lambda: analyt('mostvaluable'))
+            mostvaluable_btn.pack()
+            
+            leastvaluable_btn = tk.Button(self, text='Least valuable account', command=lambda: analyt('leastvaluable'))
+            leastvaluable_btn.pack()
 
 
 
