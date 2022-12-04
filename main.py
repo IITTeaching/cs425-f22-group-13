@@ -598,6 +598,10 @@ class ManagerLogin(tk.Frame):
             label2.pack()
 
             to_transaction_btn = tk.Button(self, text = "Analytics", command=to_analytics)
+            to_transaction_btn.pack()
+            
+            btn= tk.Button(self, text="Logout", command=back)
+            btn.pack(side="bottom")
         def choose_analytics():
             def analyt(analytic):
                 label.pack_forget()
