@@ -21,7 +21,7 @@ class MainFrame(tk.Tk):
 
         self.listing = {}
 
-        for p in (LoginPage, EmployeePage, TellerLogin) :
+        for p in (LoginPage, EmployeePage, TellerLogin, CustomerLogin) :
             page_name = p.__name__
             frame = p(parent = container, controller = self)
             frame.place(relheight=1, relwidth=1)
@@ -55,8 +55,17 @@ class MainFrame(tk.Tk):
         cur.close()
         conn.close()
         return accounts
+    
+    def get_cust_acc(self, name):
+        conn = psycopg2.connect("dbname=bank user=sam password=password789")
+        cur = conn.cursor()
+        cur.execute("SELECT number FROM (SELECT * FROM (SELECT * FROM owns NATURAL JOIN customers) as sub1 WHERE name = '" + name +  "') as sub2;")
+        accounts = cur.fetchall()
+        cur.close()
+        conn.close()
+        return accounts
         
-    def choose_acc(self, transfer):
+    def choose_acc(self, transfer, loggedInAcc, loggedInAs):
         def loop(a):
             print(a)
             for i in a:
@@ -140,7 +149,41 @@ class MainFrame(tk.Tk):
                         conn.commit()
                         cur.close()
                         conn.close()
-        acc = self.get_teller_acc()
+                else:
+                    print('withdraw/deposite')
+                    conn = psycopg2.connect("dbname=bank user=john password=password456")
+                    cur = conn.cursor()
+                    get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
+                    cur.execute(get_curr_bal)
+                    x = loop(cur.fetchall())
+                    if transfer == 'withdrawl':
+                        newVal = x-Decimal(INPUT)
+                    else:
+                        newVal = x+Decimal(INPUT)
+                    update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                    cur.execute(update_val)
+                    conn.commit()
+                    trans_id = get_trans_id()
+                    desc = "'" + transfer + "'"
+                    if transfer == 'deposite':
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null)"
+                    else:
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ")"
+                    print(update_transaction_comm)
+                    cur.execute(update_transaction_comm)
+                    success_msg.pack()
+                    success_msg.place(x=265,y=200)
+                    if transfer == 'withdrawl':
+                        success_msg.config(text="Withdrawl successful!")
+                    else:
+                        success_msg.config(text='Deopsite Successful!')
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+        if loggedInAcc == 'tell':
+           acc = self.get_teller_acc()
+        else:
+            acc = self.get_cust_acc(loggedInAs)
         print(acc)
         options = []
         for i in acc:
@@ -211,6 +254,15 @@ class MainFrame(tk.Tk):
 
         else:
             print('')
+            txt = 'Choose account to ' + transfer + ' from.'
+            label1 = tk.Label(self, text=txt)
+            label1.pack()
+            label1.place(x=270,y=20)
+            txt2 = 'How much money would you like to ' + transfer + ' Make sure your input is a number (ex: 50 or 50.00)'
+            amnt_label.config(text=txt2)
+            amnt_label.place(x=75, y=75)
+            inputtxt.place(x=333, y=100)
+            confirm_btn.place(x=330, y=125)
 
         
     def up_frame(self, page_name):
@@ -228,7 +280,7 @@ class LoginPage(tk.Frame):
         to_employee = tk.Button(self, text = "Employee", command=lambda: controller.up_frame("EmployeePage"))
         to_employee.pack()
 
-        to_customer = tk.Button(self, text = "Customer")
+        to_customer = tk.Button(self, text = "Customer", command=lambda: controller.up_frame("CustomerLogin"))
         to_customer.pack()
 
 
@@ -263,7 +315,7 @@ class TellerLogin(tk.Frame):
             print(clicked.get())
             logged_in_text = "Welcome Back " + clicked.get()
             print(logged_in_text)
-            logged_in(logged_in_text)
+            logged_in(logged_in_text, clicked.get())
 
         # Dropdown menu options
         print('in teller page')            
@@ -288,7 +340,7 @@ class TellerLogin(tk.Frame):
         btn = tk.Button( self , text = "Login" , command = show )
         btn.pack()
 
-        def logged_in(logged_in_text):
+        def logged_in(logged_in_text, loggedInAs):
             #this method is used to "logout", the easiest way I could think to do it was to delete the current tkinter instance and create a new one
             def back():
                 label.pack_forget()
@@ -299,7 +351,7 @@ class TellerLogin(tk.Frame):
             def to_transaction():
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
-                choose_transaction()
+                choose_transaction(loggedInAs)
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -313,14 +365,14 @@ class TellerLogin(tk.Frame):
             btn= tk.Button(self, text="Logout", command=back)
             btn.pack(side="bottom")
         ###TODO Refactor the bellow functions/pages into main frame so that it can be used by teller and customer
-        def choose_transaction():
+        def choose_transaction(loggedIn):
             def hide_all(transaction):
                 label.pack_forget()
                 withdraw_btn.pack_forget()
                 deposite_btn.pack_forget()
                 transfer_btn.pack_forget()
                 external_transfer_btn.pack_forget()
-                controller.choose_acc(transaction)      
+                controller.choose_acc(transaction, 'tell', loggedIn)      
 
             label = tk.Label(self, text='What kind of transaction would you like to make?')
             label.pack()
@@ -328,7 +380,7 @@ class TellerLogin(tk.Frame):
             withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
             withdraw_btn.pack()
 
-            deposite_btn = tk.Button(self, text='Make Deposite')
+            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
             deposite_btn.pack()
 
             transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
@@ -337,7 +389,90 @@ class TellerLogin(tk.Frame):
             external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
             external_transfer_btn.pack()
 
+class CustomerLogin(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        logged_in_as = ""
+        # Hide the dropdown/button and replace with new properties (did this instead of creating a whole new page as this was easier)
+        def show():
+            drop.pack_forget()
+            btn.pack_forget()
+            print(clicked.get())
+            logged_in_text = "Welcome Back " + clicked.get()
+            print(logged_in_text)
+            logged_in(logged_in_text, clicked.get())
 
+        # Dropdown menu options
+        print('in cust page')            
+        options = []
+        for i in controller.customers:
+            for x in i:
+                print(x)
+                options.append(x)
+        print(options)
+
+        # datatype of menu text
+        clicked = tk.StringVar()
+
+        # initial menu text
+        clicked.set(options[0])
+
+        # Create Dropdown menu
+        drop = tk.OptionMenu( self , clicked , *options )
+        drop.pack()
+
+        # Create button, it will change label text
+        btn = tk.Button( self , text = "Login" , command = show )
+        btn.pack()
+
+        def logged_in(logged_in_text, loggedInAS):
+            #this method is used to "logout", the easiest way I could think to do it was to delete the current tkinter instance and create a new one
+            def back():
+                label.pack_forget()
+                label2.pack_forget()
+                btn.pack_forget()
+                controller.destroy()
+                controller.__init__()
+            def to_transaction():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                choose_transaction(loggedInAS)
+            print('in logged in')
+            print(logged_in_text)
+            label = tk.Label(self, text = logged_in_text)
+            label.pack()
+            label2 = tk.Label(self, text = "What would you like to do?")
+            label2.pack()
+
+            to_transaction_btn = tk.Button(self, text = "Make Transaction", command=to_transaction)
+            to_transaction_btn.pack()
+
+            btn= tk.Button(self, text="Logout", command=back)
+            btn.pack(side="bottom")
+        ###TODO Refactor the bellow functions/pages into main frame so that it can be used by teller and customer
+        def choose_transaction(loggedIn):
+            def hide_all(transaction):
+                label.pack_forget()
+                withdraw_btn.pack_forget()
+                deposite_btn.pack_forget()
+                transfer_btn.pack_forget()
+                external_transfer_btn.pack_forget()
+                controller.choose_acc(transaction, 'cust', loggedIn)      
+
+            label = tk.Label(self, text='What kind of transaction would you like to make?')
+            label.pack()
+            
+            withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
+            withdraw_btn.pack()
+
+            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
+            deposite_btn.pack()
+
+            transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
+            transfer_btn.pack()
+
+            external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
+            external_transfer_btn.pack()
 
 
 
