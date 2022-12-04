@@ -31,7 +31,7 @@ class MainFrame(tk.Tk):
     managers = []
     customers = []
     def get_initial_data(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT name FROM Employees WHERE type = 'Teller';")
         tellers = cur.fetchall()
@@ -48,7 +48,7 @@ class MainFrame(tk.Tk):
         conn.close()
 
     def get_teller_acc(self):
-        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -57,7 +57,7 @@ class MainFrame(tk.Tk):
         return accounts
     
     def get_manager_acc(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -68,50 +68,51 @@ class MainFrame(tk.Tk):
     def choose_ana(self, analytic):
         success_msg = tk.Label(self, text='',fg="green")
         if analytic == 'networth':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_net = "SELECT SUM(Balance) AS sum FROM Account"
             cur.execute(get_net)
             net = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=265,y=200)
-            success_msg.config(text=net)
+            success_msg.place(x=280, y=200)
+            success_msg.config(text="Total Net Worth: " + str(net[0][0]))
+            # success_msg.config(text=net)
             conn.commit()
             cur.close()
             conn.close()
         elif analytic == 'mean':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_avg = "SELECT AVG(Balance) AS mean FROM Account"
             cur.execute(get_avg)
             mean = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=265,y=200)
-            success_msg.config(text=mean)
+            success_msg.place(x=255, y=200)
+            success_msg.config(text="Mean of Balances: " + str(mean[0][0]))
             conn.commit()
             cur.close()
             conn.close()
         elif analytic == 'mostvaluable': #SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_mst = "SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1"
             cur.execute(get_mst)
             mst = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=265,y=200)
-            success_msg.config(text=mst)
+            success_msg.place(x=200, y=200)
+            success_msg.config(text="Most Valuable Account: " + str(mst[0][0]) + " with a balance of " + str(mst[0][1]))
             conn.commit()
             cur.close()
             conn.close()
         elif analytic == 'leastvaluable':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_lst = "SELECT Number,Balance FROM Account ORDER BY Balance ASC LIMIT 1"
             cur.execute(get_lst)
             lst = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=265,y=200)
-            success_msg.config(text=lst)
+            success_msg.place(x=200, y=200)
+            success_msg.config(text="Least Valuable Account: " + str(lst[0][0]) + " with a balance of " + str(lst[0][1]))
             conn.commit()
             cur.close()
             conn.close()
@@ -146,7 +147,7 @@ class MainFrame(tk.Tk):
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 if transfer == 'transfer':
-                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
@@ -181,7 +182,7 @@ class MainFrame(tk.Tk):
                         incor_inp.place(x=200, y=200)
                         incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
                     else:
-                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                         cur = conn.cursor()
                         get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                         cur.execute(get_curr_bal)
