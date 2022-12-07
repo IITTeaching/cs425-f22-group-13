@@ -1,10 +1,8 @@
-from asyncio.windows_events import NULL
-from pickle import FALSE
 import tkinter as tk
 import psycopg2
 from decimal import Decimal
 import random
-
+from datetime import date
 
 #        conn = psycopg2.connect("dbname=bank user=bob password=password123")
 #   cur = conn.cursor()
@@ -219,6 +217,7 @@ class MainFrame(tk.Tk):
     
     
     def choose_acc(self, transfer, loggedInAcc, loggedInAs):
+        today = date.today()
         def loop(a):
             print(a)
             for i in a:
@@ -265,7 +264,8 @@ class MainFrame(tk.Tk):
                     conn.commit()
                     trans_id = get_trans_id()
                     desc = "'Trasnfered money'"
-                    update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ")"
+                    print("Today's date:", today)
+                    update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ", '" + str(today) +"');"
                     print(update_transaction_comm)
                     cur.execute(update_transaction_comm)
                     success_msg.pack()
@@ -293,7 +293,8 @@ class MainFrame(tk.Tk):
                         conn.commit()
                         trans_id = get_trans_id()
                         desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", null" + ")"
+                        print('todays date:', today)
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) + "');"
                         print(update_transaction_comm)
                         cur.execute(update_transaction_comm)
                         success_msg.pack()
@@ -318,10 +319,11 @@ class MainFrame(tk.Tk):
                     conn.commit()
                     trans_id = get_trans_id()
                     desc = "'" + transfer + "'"
+                    print('todays date:', today)
                     if transfer == 'deposite':
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null)"
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null, '" + str(today) +  "');"
                     else:
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ")"
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) +  "');"
                     print(update_transaction_comm)
                     cur.execute(update_transaction_comm)
                     success_msg.pack()
@@ -333,12 +335,20 @@ class MainFrame(tk.Tk):
                     conn.commit()
                     cur.close()
                     conn.close()
+        transferAccOpt = []
         if loggedInAcc == 'tell':
-           acc = self.get_teller_acc()
+            acc = self.get_teller_acc()
+            for i in acc:
+                for x in i:
+                    print(x)
+                    transferAccOpt.append(x)
         else:
             acc = self.get_cust_acc(loggedInAs)
-                
-        acc = self.get_teller_acc()
+            transferAcc = self.get_teller_acc()
+            for i in transferAcc:
+                for x in i:
+                    print(x)
+                    transferAccOpt.append(x)
         print(acc)
         options = []
         for i in acc:
@@ -380,7 +390,7 @@ class MainFrame(tk.Tk):
             clicked1.set(options[1])
 
                     # Create Dropdown menu
-            drop1 = tk.OptionMenu( self , clicked1 , *options )
+            drop1 = tk.OptionMenu( self , clicked1 , *transferAccOpt )
             drop1.pack()
             drop1.place(x=325,y=90)
             confirm_btn.place(x=330,y=160)
