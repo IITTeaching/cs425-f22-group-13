@@ -1,10 +1,12 @@
+from asyncio.windows_events import NULL
+from pickle import FALSE
 import tkinter as tk
 import psycopg2
 from decimal import Decimal
 import random
 
 
-#        conn = psycopg2.connect("dbname=bank user=bob password=password123")
+#        conn = psycopg2.connect("dbname=postgres user=bob password=password123")
 #   cur = conn.cursor()
 #   cur.execute("SELECT * FROM branches;")
 #   print(cur.fetchone())
@@ -31,7 +33,7 @@ class MainFrame(tk.Tk):
     managers = []
     customers = []
     def get_initial_data(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
         cur = conn.cursor()
         cur.execute("SELECT name FROM Employees WHERE type = 'Teller';")
         tellers = cur.fetchall()
@@ -48,7 +50,7 @@ class MainFrame(tk.Tk):
         conn.close()
 
     def get_teller_acc(self):
-        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
+        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -58,7 +60,7 @@ class MainFrame(tk.Tk):
     
 
     def get_cust_acc(self, name):
-        conn = psycopg2.connect("dbname=bank user=sam password=password789")
+        conn = psycopg2.connect("dbname=postgres user=sam password=password789")
         cur = conn.cursor()
         cur.execute("SELECT number FROM (SELECT * FROM (SELECT * FROM owns NATURAL JOIN customers) as sub1 WHERE name = '" + name +  "') as sub2;")
         accounts = cur.fetchall()
@@ -67,19 +69,106 @@ class MainFrame(tk.Tk):
         return accounts
 
     def get_manager_acc(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
         cur.close()
         conn.close()
         return accounts
+
+    def manager_acc_man(self, action): ###BOOKMARK CTRL-F TO GET HERE!!
+        if action == 'create':
+            def get_acc_id():
+                id = ''
+                for i in range(0, 10):
+                    id += str(random.randint(0, 9))
+                return id
+            def exec_create():
+                prompt.pack_forget()
+                numbers.pack_forget()
+                type_drop.pack_forget()
+                conf_btn.pack_forget()
+                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+                cur = conn.cursor()
+                id_uniq = False
+                while not id_uniq:
+                    id = get_acc_id()
+                    cur.execute("SELECT Number FROM Account WHERE Number = '" + id + "'")
+                    check_uniq = cur.fetchall()
+                    if check_uniq == []:
+                        id_uniq = True
+                ssn_string = numbers.get('1.0','end-1c')
+                ssn_list = ssn_string.split()
+                cur.execute("INSERT INTO Account VALUES ('" + id +"', '" + type_choice.get() + "', 0.00)")
+                for i in range(len(ssn_list)):
+                    print(ssn_list[i])
+                    cur.execute("INSERT INTO Owns VALUES ('"+ ssn_list[i] + "', '" + id +"')")
+
+                conn.commit()
+                cur.close()
+                conn.close()
+                conf_message = tk.Label(self, text='Account created with account ID ' + id + ' and owners ' + ssn_string)
+                conf_message.pack()
+                #Check if SSNs are valid?
+
+
+            prompt = tk.Label(self, text='Please enter SSN of account owner. For joint accounts, separate SSN entries with spaces.')
+            prompt.pack()
+            #acc_prompt.place(x=270,y=20)
+
+            numbers = tk.Text(self, height = 1,
+             width = 33,
+             bg = "white",
+             fg="red")
+            numbers.pack()
+
+            options = ['Checking', 'Savings']
+            type_choice = tk.StringVar()
+            type_choice.set(options[0])
+            type_drop = tk.OptionMenu(self, type_choice, *options)
+            type_drop.pack()
+
+            conf_btn = tk.Button(self, text='Create', command= lambda: exec_create())
+            conf_btn.pack()
+
+        elif action == 'delete':
+            def exec_delete():
+                prompt.pack_forget()
+                del_drop.pack_forget()
+                conf_btn.pack_forget()
+                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+                cur = conn.cursor()
+                cur.execute("DELETE FROM Owns WHERE Number = '" + del_acc.get() + "'")
+                cur.execute("DELETE FROM Account WHERE Number = '" + del_acc.get() + "'")
+                conn.commit()
+                cur.close()
+                conn.close()
+                conf_message = tk.Label(self, text='Account with ID ' + del_acc.get() + "' deleted.")
+                conf_message.pack()
+            prompt = tk.Label(self, text='Please select account to be deleted.')
+            prompt.pack()
+
+            acc = self.get_manager_acc()
+            print(acc)
+            acc_list = []
+            for i in acc:
+                for x in i:
+                    print(x)
+                    acc_list.append(x)
+            del_acc = tk.StringVar()
+            del_acc.set(acc_list[0])
+            del_drop = tk.OptionMenu(self, del_acc, *acc_list)
+            del_drop.pack()
+
+            conf_btn = tk.Button(self, text='Delete', command= lambda: exec_delete())
+            conf_btn.pack()
         
     
     def choose_ana(self, analytic):
         success_msg = tk.Label(self, text='',fg="green")
         if analytic == 'networth':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
             cur = conn.cursor()
             get_net = "SELECT SUM(Balance) AS sum FROM Account"
             cur.execute(get_net)
@@ -92,7 +181,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'mean':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
             cur = conn.cursor()
             get_avg = "SELECT AVG(Balance) AS mean FROM Account"
             cur.execute(get_avg)
@@ -104,7 +193,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'mostvaluable': #SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
             cur = conn.cursor()
             get_mst = "SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1"
             cur.execute(get_mst)
@@ -116,7 +205,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'leastvaluable':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
             cur = conn.cursor()
             get_lst = "SELECT Number,Balance FROM Account ORDER BY Balance ASC LIMIT 1"
             cur.execute(get_lst)
@@ -158,7 +247,7 @@ class MainFrame(tk.Tk):
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 if transfer == 'transfer':
-                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
+                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
@@ -193,7 +282,7 @@ class MainFrame(tk.Tk):
                         incor_inp.place(x=200, y=200)
                         incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
                     else:
-                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
+                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
                         cur = conn.cursor()
                         get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                         cur.execute(get_curr_bal)
@@ -215,7 +304,7 @@ class MainFrame(tk.Tk):
                         conn.close()
                 else:
                     print('withdraw/deposite')
-                    conn = psycopg2.connect("dbname=bank user=john password=password456")
+                    conn = psycopg2.connect("dbname=postgres user=john password=password456")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
@@ -590,6 +679,11 @@ class ManagerLogin(tk.Frame):
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
                 choose_analytics()
+            def to_acc_man():
+                label2.pack_forget()
+                acc_man_btn.pack_forget()
+                to_transaction_btn.pack_forget()
+                choose_acc_man()
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -597,11 +691,28 @@ class ManagerLogin(tk.Frame):
             label2 = tk.Label(self, text = "What would you like to do?")
             label2.pack()
 
+            acc_man_btn = tk.Button(self, text = 'Account Management', command=to_acc_man)
+            acc_man_btn.pack()
+
             to_transaction_btn = tk.Button(self, text = "Analytics", command=to_analytics)
             to_transaction_btn.pack()
             
             btn= tk.Button(self, text="Logout", command=back)
             btn.pack(side="bottom")
+        def choose_acc_man():
+            def acc_man_exec(action):
+                label.pack_forget()
+                create_btn.pack_forget()
+                delete_btn.pack_forget()
+                controller.manager_acc_man(action)
+            label = tk.Label(self, text='Which action would you like to take?')
+            label.pack()
+
+            create_btn = tk.Button(self, text = 'Create account', command=lambda: acc_man_exec('create'))
+            create_btn.pack()
+
+            delete_btn = tk.Button(self, text = 'Delete account', command=lambda: acc_man_exec('delete'))
+            delete_btn.pack()
         def choose_analytics():
             def analyt(analytic):
                 label.pack_forget()
