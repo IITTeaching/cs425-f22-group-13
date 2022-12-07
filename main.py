@@ -6,7 +6,7 @@ from decimal import Decimal
 import random
 
 
-#        conn = psycopg2.connect("dbname=postgres user=bob password=password123")
+#        conn = psycopg2.connect("dbname=bank user=bob password=password123")
 #   cur = conn.cursor()
 #   cur.execute("SELECT * FROM branches;")
 #   print(cur.fetchone())
@@ -33,7 +33,7 @@ class MainFrame(tk.Tk):
     managers = []
     customers = []
     def get_initial_data(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT name FROM Employees WHERE type = 'Teller';")
         tellers = cur.fetchall()
@@ -50,7 +50,7 @@ class MainFrame(tk.Tk):
         conn.close()
 
     def get_teller_acc(self):
-        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -60,7 +60,7 @@ class MainFrame(tk.Tk):
     
 
     def get_cust_acc(self, name):
-        conn = psycopg2.connect("dbname=postgres user=sam password=password789")
+        conn = psycopg2.connect("dbname=bank user=sam password=password789")
         cur = conn.cursor()
         cur.execute("SELECT number FROM (SELECT * FROM (SELECT * FROM owns NATURAL JOIN customers) as sub1 WHERE name = '" + name +  "') as sub2;")
         accounts = cur.fetchall()
@@ -69,7 +69,7 @@ class MainFrame(tk.Tk):
         return accounts
 
     def get_manager_acc(self):
-        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+        conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM Account;")
         accounts = cur.fetchall()
@@ -89,7 +89,7 @@ class MainFrame(tk.Tk):
                 numbers.pack_forget()
                 type_drop.pack_forget()
                 conf_btn.pack_forget()
-                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
                 cur = conn.cursor()
                 id_uniq = False
                 while not id_uniq:
@@ -137,7 +137,7 @@ class MainFrame(tk.Tk):
                 prompt.pack_forget()
                 del_drop.pack_forget()
                 conf_btn.pack_forget()
-                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
                 cur = conn.cursor()
                 cur.execute("DELETE FROM Owns WHERE Number = '" + del_acc.get() + "'")
                 cur.execute("DELETE FROM Account WHERE Number = '" + del_acc.get() + "'")
@@ -168,7 +168,7 @@ class MainFrame(tk.Tk):
     def choose_ana(self, analytic):
         success_msg = tk.Label(self, text='',fg="green")
         if analytic == 'networth':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_net = "SELECT SUM(Balance) AS sum FROM Account"
             cur.execute(get_net)
@@ -181,7 +181,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'mean':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_avg = "SELECT AVG(Balance) AS mean FROM Account"
             cur.execute(get_avg)
@@ -193,7 +193,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'mostvaluable': #SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_mst = "SELECT Number,Balance FROM Account ORDER BY Balance DESC LIMIT 1"
             cur.execute(get_mst)
@@ -205,7 +205,7 @@ class MainFrame(tk.Tk):
             cur.close()
             conn.close()
         elif analytic == 'leastvaluable':
-            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="postgres")
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
             cur = conn.cursor()
             get_lst = "SELECT Number,Balance FROM Account ORDER BY Balance ASC LIMIT 1"
             cur.execute(get_lst)
@@ -247,7 +247,7 @@ class MainFrame(tk.Tk):
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 if transfer == 'transfer':
-                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
@@ -282,7 +282,7 @@ class MainFrame(tk.Tk):
                         incor_inp.place(x=200, y=200)
                         incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
                     else:
-                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="postgres")
+                        conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                         cur = conn.cursor()
                         get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                         cur.execute(get_curr_bal)
@@ -304,7 +304,7 @@ class MainFrame(tk.Tk):
                         conn.close()
                 else:
                     print('withdraw/deposite')
-                    conn = psycopg2.connect("dbname=postgres user=john password=password456")
+                    conn = psycopg2.connect("dbname=bank user=john password=password456")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
