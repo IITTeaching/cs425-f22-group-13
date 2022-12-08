@@ -785,16 +785,16 @@ class ManagerLogin(tk.Frame):
             data_btn = tk.Button(self, text='View data for my branch', command=lambda: analyt('branch',manager))
             data_btn.pack()
             
-            networth_btn = tk.Button(self, text='Total net worth of all customers', command=lambda: analyt('networth'))
+            networth_btn = tk.Button(self, text='Total net worth of all customers', command=lambda: analyt('networth',manager))
             networth_btn.pack()
 
-            mean_btn = tk.Button(self, text='Mean balance for all customers', command=lambda: analyt('mean'))
+            mean_btn = tk.Button(self, text='Mean balance for all customers', command=lambda: analyt('mean',manager))
             mean_btn.pack()
 
-            mostvaluable_btn = tk.Button(self, text='Most valuable account', command=lambda: analyt('mostvaluable'))
+            mostvaluable_btn = tk.Button(self, text='Most valuable account', command=lambda: analyt('mostvaluable',manager))
             mostvaluable_btn.pack()
             
-            leastvaluable_btn = tk.Button(self, text='Least valuable account', command=lambda: analyt('leastvaluable'))
+            leastvaluable_btn = tk.Button(self, text='Least valuable account', command=lambda: analyt('leastvaluable',manager))
             leastvaluable_btn.pack()
 
 
