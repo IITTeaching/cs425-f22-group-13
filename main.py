@@ -9,7 +9,7 @@ from datetime import datetime
 #        conn = psycopg2.connect("dbname=bank user=bob password=password123")
 #   cur = conn.cursor()
 #   cur.execute("SELECT * FROM branches;")
-#   print(cur.fetchone())
+#   #print(cur.fetchone())
 class MainFrame(tk.Tk):
     #Frame object holding all pages
     cont = None
@@ -37,11 +37,11 @@ class MainFrame(tk.Tk):
         cur = conn.cursor()
         cur.execute("SELECT name FROM Employees WHERE type = 'Teller';")
         tellers = cur.fetchall()
-        print(tellers)
+        #print(tellers)
         self.tellers = tellers
         cur.execute("SELECT name FROM Employees WHERE type = 'Manager';")
         managers = cur.fetchall()
-        print(managers)
+        #print(managers)
         self.managers = managers
         cur.execute("SELECT name FROM Customers;")
         cust = cur.fetchall()
@@ -85,36 +85,58 @@ class MainFrame(tk.Tk):
                     id += str(random.randint(0, 9))
                 return id
             def exec_create():
-                prompt.pack_forget()
-                numbers.pack_forget()
-                type_drop.pack_forget()
-                conf_btn.pack_forget()
-                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
-                cur = conn.cursor()
-                id_uniq = False
-                while not id_uniq:
-                    id = get_acc_id()
-                    cur.execute("SELECT Number FROM Account WHERE Number = '" + id + "'")
-                    check_uniq = cur.fetchall()
-                    if check_uniq == []:
-                        id_uniq = True
-                ssn_string = numbers.get('1.0','end-1c')
-                ssn_list = ssn_string.split()
-                cur.execute("INSERT INTO Account VALUES ('" + id +"', '" + type_choice.get() + "', 0.00)")
-                for i in range(len(ssn_list)):
-                    print(ssn_list[i])
-                    cur.execute("INSERT INTO Owns VALUES ('"+ ssn_list[i] + "', '" + id +"')")
+                incor_inp = tk.Label(self, text='', fg="red")
+                incor_inp.pack_forget()
+                if(not numbers.get('1.0','end-1c')):
+                    incor_inp.pack()
+                    incor_inp.place(x=550,y=150)
+                    incor_inp.config(text='Please enter at least one account number')
+                else:
+                    prompt.pack_forget()
+                    numbers.pack_forget()
+                    type_drop.pack_forget()
+                    conf_btn.pack_forget()
+                    conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+                    cur = conn.cursor()
+                    id_uniq = False
+                    while not id_uniq:
+                        id = get_acc_id()
+                        cur.execute("SELECT Number FROM Account WHERE Number = '" + id + "'")
+                        check_uniq = cur.fetchall()
+                        if check_uniq == []:
+                            id_uniq = True
+                    ssn_string = numbers.get('1.0','end-1c')
+                    ssn_list = ssn_string.split()
+                    for i in range(len(ssn_list)):
+                        if len(ssn_list[i]) != 9:
+                            incor_inp.pack()
+                            incor_inp.place(x=575,y=150)
+                            incor_inp.config(text='Invalid SSN: ' + ssn_list[i])
+                            return
+                    for i in range(len(ssn_list)):
+                        cur.execute("SELECT Name from customers WHERE SSN = '" + ssn_list[i] + "'")
+                        cust_exists = cur.fetchall()
+                        if cust_exists==[]:
+                            incor_inp.pack()
+                            incor_inp.place(x=575,y=150)
+                            incor_inp.config(text='SSN not in system: ' + ssn_list[i])
+                            return
+                    cur.execute("INSERT INTO Account VALUES ('" + id +"', '" + type_choice.get() + "', 0.00)")
+                    for i in range(len(ssn_list)):
+                        cur.execute("INSERT INTO Owns VALUES ('"+ ssn_list[i] + "', '" + id +"')")
 
-                conn.commit()
-                cur.close()
-                conn.close()
-                conf_message = tk.Label(self, text='Account created with account ID ' + id + ' and owners ' + ssn_string)
-                conf_message.pack()
-                #Check if SSNs are valid?
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    conf_message = tk.Label(self, text='Account created with account ID ' + id + ' and owners ' + ssn_string, fg="green")
+                    conf_message.pack()
+                    conf_message.place(x=475, y=150)
+                    #Check if SSNs are valid?
 
 
             prompt = tk.Label(self, text='Please enter SSN of account owner. For joint accounts, separate SSN entries with spaces.')
             prompt.pack()
+            prompt.place(x=475, y=20)
             #acc_prompt.place(x=270,y=20)
 
             numbers = tk.Text(self, height = 1,
@@ -122,15 +144,18 @@ class MainFrame(tk.Tk):
              bg = "white",
              fg="red")
             numbers.pack()
+            numbers.place(x=550, y=40)
 
             options = ['Checking', 'Savings']
             type_choice = tk.StringVar()
             type_choice.set(options[0])
             type_drop = tk.OptionMenu(self, type_choice, *options)
             type_drop.pack()
+            type_drop.place(x=600, y=60)
 
             conf_btn = tk.Button(self, text='Create', command= lambda: exec_create())
             conf_btn.pack()
+            conf_btn.place(x=615, y=100)
 
         elif action == 'delete':
             def exec_delete():
@@ -146,23 +171,26 @@ class MainFrame(tk.Tk):
                 conn.close()
                 conf_message = tk.Label(self, text='Account with ID ' + del_acc.get() + "' deleted.")
                 conf_message.pack()
+                conf_message.place(x=550, y=110)
             prompt = tk.Label(self, text='Please select account to be deleted.')
             prompt.pack()
+            prompt.place(x=550, y=20)
 
             acc = self.get_manager_acc()
-            print(acc)
             acc_list = []
             for i in acc:
                 for x in i:
-                    print(x)
+                    #print(x)
                     acc_list.append(x)
             del_acc = tk.StringVar()
             del_acc.set(acc_list[0])
             del_drop = tk.OptionMenu(self, del_acc, *acc_list)
             del_drop.pack()
+            del_drop.place(x=600, y=40)
 
             conf_btn = tk.Button(self, text='Delete', command= lambda: exec_delete())
             conf_btn.pack()
+            conf_btn.place(x=615, y=75)
                 
         
     def add_fees(self, type, loggedInAs):
@@ -174,6 +202,7 @@ class MainFrame(tk.Tk):
             INPUT = inputtxt.get("1.0", "end-1c")
             if(INPUT.isdecimal() == False):
                 incor_inp.pack()
+                incor_inp.place(x=525,y=100)
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
@@ -185,19 +214,19 @@ class MainFrame(tk.Tk):
                 for i in cur.fetchall():
                     for x in i:
                         accNum.append(x)
-                print('nums, ', accNum)
+                #print('nums, ', accNum)
                 if type == 'interest':
                     for nums in accNum:
                         check_type = "SELECT type FROM Account WHERE number = '" + nums + "';"
                         cur.execute(check_type)
                         accT = cur.fetchall()
-                        print('type ', accT)
+                        #print('type ', accT)
                         if str(accT[0][0]) == 'Checkings':
                             print('not adding interest')
                         else:
-                            print('adding interest')
+                            #print('adding interest')
                             update_fees = "UPDATE Account SET interest=" + INPUT + " WHERE number = '" + nums + "';"
-                            print(update_fees)
+                            #print(update_fees)
                             cur.execute(update_fees)
                             conn.commit()
                 elif type == 'overdraft fees':
@@ -208,32 +237,36 @@ class MainFrame(tk.Tk):
                         if str(accT[0][0]) == 'Savings':
                             print('not adding overdraft fees to savings acc')
                         else:                        
-                            print('adding overdraft')
+                            #print('adding overdraft')
                             update_fees = "UPDATE Account SET overdraft_fees=" + INPUT + " WHERE number = '" + nums + "';"
-                            print(update_fees)
+                            #print(update_fees)
                             cur.execute(update_fees)
                             conn.commit()
                 else:
-                    print('adding acc fees')
+                    #print('adding acc fees')
                     for nums in accNum:
                         update_fees = "UPDATE Account SET account_fees=" + INPUT + " WHERE number = '" + nums + "';"
-                        print(update_fees)
+                        #print(update_fees)
                         cur.execute(update_fees)
                         conn.commit()
                 succ_txt = 'Successfully added ' + type
                 success_msg.config(text=succ_txt)
                 success_msg.pack()
-        print('in add fees')
-        txt2 = 'How much ' + type + ' would you like to add'
+                success_msg.place(x=550,y=100)
+        #print('in add fees')
+        txt2 = 'How much ' + type + ' would you like to add?'
         label2 = tk.Label(self, text=txt2)
         label2.pack()
+        label2.place(x=550, y=20)
         inputtxt = tk.Text(self, height = 1,
             width = 10,
             bg = "white",
             fg="red")
         inputtxt.pack()
+        inputtxt.place(x=600,y=40)
         confirm_btn = tk.Button(self, text='Confirm', command=lambda: add_fees_sql())
         confirm_btn.pack()
+        confirm_btn.place(x=610, y=75)
 
 
 
@@ -246,7 +279,7 @@ class MainFrame(tk.Tk):
             cur.execute(get_net)
             net = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=280, y=200)
+            success_msg.place(x=575, y=200)
             success_msg.config(text="Total Net Worth: " + str(net[0][0]))
             # success_msg.config(text=net)
             conn.commit()
@@ -259,7 +292,7 @@ class MainFrame(tk.Tk):
             cur.execute(get_avg)
             mean = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=255, y=200)
+            success_msg.place(x=575, y=200)
             success_msg.config(text="Mean of Balances: " + str(mean[0][0]))
             conn.commit()
             cur.close()
@@ -271,7 +304,7 @@ class MainFrame(tk.Tk):
             cur.execute(get_mst)
             mst = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=200, y=200)
+            success_msg.place(x=550, y=200)
             success_msg.config(text="Most Valuable Account: " + str(mst[0][0]) + " with a balance of " + str(mst[0][1]))
             conn.commit()
             cur.close()
@@ -283,7 +316,7 @@ class MainFrame(tk.Tk):
             cur.execute(get_lst)
             lst = cur.fetchall()
             success_msg.pack()
-            success_msg.place(x=200, y=200)
+            success_msg.place(x=550, y=200)
             success_msg.config(text="Least Valuable Account: " + str(lst[0][0]) + " with a balance of " + str(lst[0][1]))
             conn.commit()
             cur.close()
@@ -298,9 +331,9 @@ class MainFrame(tk.Tk):
             get_semm = "SELECT SUM(balance) AS sum FROM (SELECT DISTINCT ON (account.number) NAME, balance FROM (SELECT NAME,NUMBER FROM (SELECT NAME, NUMBER, type FROM (SELECT employees.name, branch, customers.ssn, employees.type FROM employees LEFT OUTER JOIN customers ON employees.branch=customers.homebranch)one RIGHT OUTER JOIN owns ON one.ssn=owns.ssn) AS two WHERE type='Manager') AS three LEFT OUTER JOIN account ON three.number=account.number) AS four WHERE NAME='" + manager + "';" 
             cur.execute(get_semm)
             lst.append(cur.fetchall())
-            print(lst)     
+            #print(lst)     
             success_msg.pack()
-            success_msg.place(x=200, y=200)
+            success_msg.place(x=550, y=200)
             success_msg.config(text='Mean: ' + str(lst[0][0][0]) + ' Sum: ' + str(lst[1][0][0]))
             conn.commit()
             cur.close()
@@ -316,12 +349,16 @@ class MainFrame(tk.Tk):
             sttmnt = cur.fetchall()
             txt = str(sttmnt)
             # transactions = tk.Label(self, text=txt)
+            j = 0
             for i in sttmnt:
                 transactions = tk.Label(self, text="Type: " + str(i[0]) + " Amount: " + str(i[1]) + " Description: " + str(i[2]) + " ID: " + str(i[3]) + " Deposit Account ID: " + str(i[4]) + " Withdrawal Account ID: " + str(i[5]) + " Date: " + str(i[6]))
                 transactions.pack()
+                transactions.place(x=250, y=(100+(20*j)))
+                j = j+1
             # transactions.pack()
         label = tk.Label(self, text="Choose Account")
         label.pack()
+        label.place(x=600,y=20)
         if loggedInAS == 'Customer':
             acc = self.get_cust_acc(loggedInName)
         else:
@@ -334,8 +371,10 @@ class MainFrame(tk.Tk):
         clicked.set(options[0])
         drop = tk.OptionMenu(self, clicked, *options)
         drop.pack()
+        drop.place(x=600,y=40)
         confirm_button = tk.Button(self, text="Confirm", command=lambda:get_statement())
         confirm_button.pack()
+        confirm_button.place(x=610,y=75)
     def choose_sta(self, loggedInAS, loggedInName):
         def get_statement():
             con = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
@@ -351,13 +390,17 @@ class MainFrame(tk.Tk):
             cur.execute(get_statement)
             sttmnt = cur.fetchall()
             txt = str(sttmnt)
+            j=0
             for i in sttmnt:
                 transactions = tk.Label(self, text="Type: " + str(i[0]) + " Amount: " + str(i[1]) + " Description: " + str(i[2]) + " ID: " + str(i[3]) + " Deposit Account ID: " + str(i[4]) + " Withdrawal Account ID: " + str(i[5]) + " Date: " + str(i[6]))
                 transactions.pack()
+                transactions.place(x=250, y=(100+(20*j)))
+                j = j+1
             # transactions = tk.Label(self, text=txt)
             # transactions.pack()
         label = tk.Label(self, text="Choose Account")
         label.pack()
+        label.place(x=600, y=20)
         if loggedInAS == 'Customer':
             acc = self.get_cust_acc(loggedInName)
         else:
@@ -370,8 +413,10 @@ class MainFrame(tk.Tk):
         clicked.set(options[0])
         drop = tk.OptionMenu(self, clicked, *options)
         drop.pack()
+        drop.place(x=600, y=40)
         confirm_button = tk.Button(self, text="Confirm", command=lambda:get_statement())
         confirm_button.pack()
+        confirm_button.place(x=610, y=70)
 
                                     
                                     
@@ -379,7 +424,7 @@ class MainFrame(tk.Tk):
     def choose_acc(self, transfer, loggedInAcc, loggedInAs):
         today = date.today()
         def loop(a):
-            print(a)
+            #print(a)
             for i in a:
                 for x in i:
                     return x
@@ -396,13 +441,13 @@ class MainFrame(tk.Tk):
             if bool(success_msg.winfo_ismapped()) == True:
                 success_msg.config(text='')
             if bool(incor_inp.winfo_ismapped()) == True:
-                print('err = true')
+                #print('err = true')
                 incor_inp.config(text="")
             INPUT = inputtxt.get("1.0", "end-1c")
-            print(INPUT)
+            #print(INPUT)
             if(INPUT.isdecimal() == False):
                 incor_inp.pack()
-                incor_inp.place(x=200, y=200)
+                incor_inp.place(x=505, y=210)
                 incor_inp.config(text='Incorrect Input, please make sure you entered a number')
             else:
                 if transfer == 'transfer':
@@ -417,7 +462,7 @@ class MainFrame(tk.Tk):
                     accType = cur.fetchall()
                     if str(accType[0][0]) == 'Savings' and newVal < 0:
                         incor_inp.pack()
-                        incor_inp.place(x=200, y=200)
+                        incor_inp.place(x=500, y=210)
                         incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
                     else:
                         update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
@@ -436,22 +481,22 @@ class MainFrame(tk.Tk):
                         conn.commit()
                         trans_id = get_trans_id()
                         desc = "'Trasnfered money'"
-                        print("Today's date:", today)
+                        #print("Today's date:", today)
                         update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ", '" + str(today) +"');"
-                        print(update_transaction_comm)
+                        #print(update_transaction_comm)
                         cur.execute(update_transaction_comm)
                         success_msg.pack()
-                        success_msg.place(x=265,y=200)
+                        success_msg.place(x=550,y=210)
                         success_msg.config(text="Successfully transfered money!")
                         conn.commit()
                         cur.close()
                         conn.close()                            
                 elif transfer == 'external':
                     ROUTNUM = routing_num.get("1.0", "end-1c")
-                    print(ROUTNUM)
+                    #print(ROUTNUM)
                     if ROUTNUM.isdecimal() == False:
                         incor_inp.pack()
-                        incor_inp.place(x=200, y=200)
+                        incor_inp.place(x=500, y=210)
                         incor_inp.config(text='Incorrect Routing Number, please make sure you entered a number')
                     else:
                         conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
@@ -465,7 +510,7 @@ class MainFrame(tk.Tk):
                         accType = cur.fetchall()
                         if str(accType[0][0]) == 'Savings' and newVal < 0:
                             incor_inp.pack()
-                            incor_inp.place(x=200, y=200)
+                            incor_inp.place(x=500, y=210)
                             incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
                         else:
                             update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
@@ -477,18 +522,18 @@ class MainFrame(tk.Tk):
                                 conn.commit()
                             trans_id = get_trans_id()
                             desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
-                            print('todays date:', today)
+                            #print('todays date:', today)
                             update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) + "');"
-                            print(update_transaction_comm)
+                            #print(update_transaction_comm)
                             cur.execute(update_transaction_comm)
                             success_msg.pack()
-                            success_msg.place(x=275,y=200)
+                            success_msg.place(x=550,y=210)
                             success_msg.config(text="Successfully transfered money!")
                             conn.commit()
                             cur.close()
                             conn.close()
                 else:
-                    print('withdraw/deposit')
+                    #print('withdraw/deposit')
                     conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
@@ -497,18 +542,18 @@ class MainFrame(tk.Tk):
                     get_type = "SELECT type FROM Account WHERE number = " + "'" + clicked.get() + "';"
                     cur.execute(get_type)
                     accType = cur.fetchall()
-                    print('type: ', accType[0][0])
-                    print('trans: ', transfer)
-                    print('x: ', x)
+                    #print('type: ', accType[0][0])
+                    #print('trans: ', transfer)
+                    #print('x: ', x)
                     if transfer == 'withdraw':
                         newVal = x-Decimal(INPUT)
                     else:
                         newVal = x+Decimal(INPUT)
-                    print('str acc:  ',str(accType[0][0]))
-                    print('newval: ', newVal)
+                    #print('str acc:  ',str(accType[0][0]))
+                    #print('newval: ', newVal)
                     if str(accType[0][0]) == 'Savings' and newVal < 0:
                         incor_inp.pack()
-                        incor_inp.place(x=200, y=200)
+                        incor_inp.place(x=500, y=200)
                         incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
                     else:
                         update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
@@ -520,15 +565,15 @@ class MainFrame(tk.Tk):
                             conn.commit()
                         trans_id = get_trans_id()
                         desc = "'" + transfer + "'"
-                        print('todays date:', today)
+                        #print('todays date:', today)
                         if transfer == 'deposit':
                             update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null, '" + str(today) +  "');"
                         else:
                             update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) +  "');"
-                        print(update_transaction_comm)
+                        #print(update_transaction_comm)
                         cur.execute(update_transaction_comm)
                         success_msg.pack()
-                        success_msg.place(x=265,y=200)
+                        success_msg.place(x=575,y=200)
                         if transfer == 'withdraw':
                             success_msg.config(text="Withdrawl successful!")
                         else:
@@ -541,20 +586,20 @@ class MainFrame(tk.Tk):
             acc = self.get_teller_acc()
             for i in acc:
                 for x in i:
-                    print(x)
+                    #print(x)
                     transferAccOpt.append(x)
         else:
             acc = self.get_cust_acc(loggedInAs)
             transferAcc = self.get_teller_acc()
             for i in transferAcc:
                 for x in i:
-                    print(x)
+                    #print(x)
                     transferAccOpt.append(x)
-        print(acc)
+        #print(acc)
         options = []
         for i in acc:
             for x in i:
-                print(x)
+                #print(x)
                 options.append(x)
                     # datatype of menu text
         clicked = tk.StringVar()
@@ -564,10 +609,10 @@ class MainFrame(tk.Tk):
                     # Create Dropdown menu
         drop = tk.OptionMenu( self , clicked , *options )
         drop.pack()
-        drop.place(x=325,y=45)
+        drop.place(x=600,y=45)
         confirm_btn = tk.Button(self, text='Confirm', command= lambda: Take_input())
         confirm_btn.pack()
-        confirm_btn.place(x=330, y=110)
+        confirm_btn.place(x=600, y=110)
         amnt_label = tk.Label(self, text='')
         amnt_label.pack()
 
@@ -576,15 +621,15 @@ class MainFrame(tk.Tk):
             bg = "white",
             fg="red")
         inputtxt.pack()
-        inputtxt.place(x=333, y=120)
+        inputtxt.place(x=600, y=120)
         if transfer is 'transfer':
-            print('in transfer')
+            #print('in transfer')
             label1 = tk.Label(self, text='Choose account to take money from:')
             label1.pack()
-            label1.place(x=270,y=20)
+            label1.place(x=550,y=20)
             label2 = tk.Label(self, text='Choose account to transfer to:')
             label2.pack()
-            label2.place(x=270,y=70)
+            label2.place(x=575,y=80)
             clicked1 = tk.StringVar()
 
                     # initial menu text
@@ -593,44 +638,44 @@ class MainFrame(tk.Tk):
                     # Create Dropdown menu
             drop1 = tk.OptionMenu( self , clicked1 , *transferAccOpt )
             drop1.pack()
-            drop1.place(x=325,y=90)
-            confirm_btn.place(x=330,y=160)
+            drop1.place(x=600,y=100)
+            confirm_btn.place(x=600,y=180)
             amnt_label.config(text='How much money would you like to transfer? Make sure your input is a number (ex: 50 or 50.00)')
-            amnt_label.place(x=70, y=110)
-            inputtxt.place(x=333, y=135)
+            amnt_label.place(x=400, y=130)
+            inputtxt.place(x=600, y=155)
         elif transfer is 'external':
-            print('in external')
+            #print('in external')
             label1 = tk.Label(self, text='Choose account to take money from:')
             label1.pack()
-            drop.place(x=310, y=45)
-            label1.place(x=270,y=20)
+            drop.place(x=600, y=45)
+            label1.place(x=550,y=20)
             label2 = tk.Label(self, text='Enter routing number of account you would like to send money to')
             label2.pack()
-            label2.place(x=200, y=70)
+            label2.place(x=500, y=80)
             routing_num = tk.Text(self, height = 1,
             width = 10,
             bg = "white",
             fg="red")
             routing_num.pack()
-            routing_num.place(x=333, y=90)
+            routing_num.place(x=600, y=100)
             amnt_label.config(text='How much money would you like to transfer? Make sure your input is a number (ex: 50 or 50.00)')
-            amnt_label.place(x=70, y=110)
-            inputtxt.place(x=333, y=130)
-            confirm_btn.place(x=330, y=150)
+            amnt_label.place(x=425, y=130)
+            inputtxt.place(x=600, y=150)
+            confirm_btn.place(x=600, y=180)
         elif transfer in ['networth', 'mean', 'mostvaluable', 'leastvaluable']:
             print('in ' + transfer)
 
         else:
-            print('')
+            #print('')
             txt = 'Choose account to ' + transfer + ' from.'
             label1 = tk.Label(self, text=txt)
             label1.pack()
-            label1.place(x=270,y=20)
-            txt2 = 'How much money would you like to ' + transfer + ' Make sure your input is a number (ex: 50 or 50.00)'
+            label1.place(x=550,y=20)
+            txt2 = 'How much money would you like to ' + transfer + '? Make sure your input is a number (ex: 50 or 50.00)'
             amnt_label.config(text=txt2)
-            amnt_label.place(x=75, y=75)
-            inputtxt.place(x=333, y=100)
-            confirm_btn.place(x=330, y=125)
+            amnt_label.place(x=400, y=75)
+            inputtxt.place(x=600, y=100)
+            confirm_btn.place(x=600, y=125)
 
         
     def up_frame(self, page_name):
@@ -678,19 +723,19 @@ class TellerLogin(tk.Frame):
         def show():
             drop.pack_forget()
             btn.pack_forget()
-            print(clicked.get())
+            #print(clicked.get())
             logged_in_text = "Welcome Back " + clicked.get()
-            print(logged_in_text)
+            #print(logged_in_text)
             logged_in(logged_in_text, clicked.get())
 
         # Dropdown menu options
-        print('in teller page')            
+        #print('in teller page')            
         options = []
         for i in controller.tellers:
             for x in i:
-                print(x)
+                #print(x)
                 options.append(x)
-        print(options)
+        #print(options)
 
         # datatype of menu text
         clicked = tk.StringVar()
@@ -718,8 +763,8 @@ class TellerLogin(tk.Frame):
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
                 choose_transaction(loggedInAs)
-            print('in logged in')
-            print(logged_in_text)
+            #print('in logged in')
+            #print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
             label.pack()
             label2 = tk.Label(self, text = "What would you like to do?")
@@ -763,19 +808,19 @@ class CustomerLogin(tk.Frame):
         def show():
             drop.pack_forget()
             btn.pack_forget()
-            print(clicked.get())
+            #print(clicked.get())
             logged_in_text = "Welcome Back " + clicked.get()
-            print(logged_in_text)
+            #print(logged_in_text)
             logged_in(logged_in_text, clicked.get())
 
         # Dropdown menu options
-        print('in cust page')            
+        #print('in cust page')            
         options = []
         for i in controller.customers:
             for x in i:
-                print(x)
+                #print(x)
                 options.append(x)
-        print(options)
+        #print(options)
 
         # datatype of menu text
         clicked = tk.StringVar()
@@ -817,8 +862,8 @@ class CustomerLogin(tk.Frame):
                 to_statement_btn.pack_forget()
                 to_pending_transactions_btn.pack_forget()
                 controller.pending_transactions('Customer', loggedInAS)
-            print('in logged in')
-            print(logged_in_text)
+            #print('in logged in')
+            #print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
             label.pack()
             label2 = tk.Label(self, text = "What would you like to do?")
@@ -870,19 +915,19 @@ class ManagerLogin(tk.Frame,):
         def show():
             drop.pack_forget()
             btn.pack_forget()
-            print(clicked.get())
+            #print(clicked.get())
             logged_in_text = "Welcome Back " + clicked.get()
-            print(logged_in_text)
+            #print(logged_in_text)
             logged_in(logged_in_text, clicked.get())
 
         # Dropdown menu options
-        print('in manager page')            
+        #print('in manager page')            
         options = []
         for i in controller.managers:
             for x in i:
-                print(x)
+                #print(x)
                 options.append(x)
-        print(options)
+        #print(options)
 
         # datatype of menu text
         clicked = tk.StringVar()
@@ -947,8 +992,8 @@ class ManagerLogin(tk.Frame,):
                 to_statement_btn.pack_forget()
                 to_pending_transactions_btn.pack_forget()
                 controller.pending_transactions('Manager', loggedInAS)
-            print('in logged in')
-            print(logged_in_text)
+            #print('in logged in')
+            #print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
             label.pack()
             label2 = tk.Label(self, text = "What would you like to do?")
@@ -999,13 +1044,13 @@ class ManagerLogin(tk.Frame,):
             delete_btn = tk.Button(self, text = 'Delete account', command=lambda: acc_man_exec('delete'))
             delete_btn.pack()
 
-            add_int = tk.Button(self, text='Add interest to an account', command=lambda: add_fee('interest'))
+            add_int = tk.Button(self, text='Add interest to valid accounts in branch', command=lambda: add_fee('interest'))
             add_int.pack()
 
-            add_overdraft = tk.Button(self, text='Add overdraft fees to an account', command=lambda: add_fee('overdraft fees'))
+            add_overdraft = tk.Button(self, text='Add overdraft fees to valid accounts in branch', command=lambda: add_fee('overdraft fees'))
             add_overdraft.pack()
 
-            add_acc_fees = tk.Button(self, text='Add account fees to an account', command=lambda: add_fee('account fees'))
+            add_acc_fees = tk.Button(self, text='Add account fees to valid accounts in branch', command=lambda: add_fee('account fees'))
             add_acc_fees.pack()           
         def choose_analytics(manager):
             def analyt(analytic,manager):
