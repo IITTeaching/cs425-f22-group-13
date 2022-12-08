@@ -252,28 +252,36 @@ class MainFrame(tk.Tk):
                     cur.execute(get_curr_bal)
                     x = loop(cur.fetchall())
                     newVal = x-Decimal(INPUT)
-                    update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
-                    cur.execute(update_val)
-                    conn.commit()
-                    get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
-                    cur.execute(get_curr_bal_2)
-                    y = loop(cur.fetchall())
-                    new_bal = y+Decimal(INPUT)
-                    update_bal ="UPDATE Account SET balance=" + str(new_bal) + " WHERE number = '" + clicked1.get() + "';"
-                    cur.execute(update_bal)
-                    conn.commit()
-                    trans_id = get_trans_id()
-                    desc = "'Trasnfered money'"
-                    print("Today's date:", today)
-                    update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ", '" + str(today) +"');"
-                    print(update_transaction_comm)
-                    cur.execute(update_transaction_comm)
-                    success_msg.pack()
-                    success_msg.place(x=265,y=200)
-                    success_msg.config(text="Successfully transfered money!")
-                    conn.commit()
-                    cur.close()
-                    conn.close()
+                    get_type = "SELECT type FROM Account WHERE number = " + "'" + clicked.get() + "';"
+                    cur.execute(get_type)
+                    accType = cur.fetchall()
+                    if str(accType[0][0]) == 'Savings' and newVal < 0:
+                        incor_inp.pack()
+                        incor_inp.place(x=200, y=200)
+                        incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
+                    else:
+                        update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                        cur.execute(update_val)
+                        conn.commit()
+                        get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
+                        cur.execute(get_curr_bal_2)
+                        y = loop(cur.fetchall())
+                        new_bal = y+Decimal(INPUT)
+                        update_bal ="UPDATE Account SET balance=" + str(new_bal) + " WHERE number = '" + clicked1.get() + "';"
+                        cur.execute(update_bal)
+                        conn.commit()
+                        trans_id = get_trans_id()
+                        desc = "'Trasnfered money'"
+                        print("Today's date:", today)
+                        update_transaction_comm = "INSERT INTO Transactions VALUES('Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ", " + clicked1.get() + ", '" + str(today) +"');"
+                        print(update_transaction_comm)
+                        cur.execute(update_transaction_comm)
+                        success_msg.pack()
+                        success_msg.place(x=265,y=200)
+                        success_msg.config(text="Successfully transfered money!")
+                        conn.commit()
+                        cur.close()
+                        conn.close()
                 elif transfer == 'external':
                     ROUTNUM = routing_num.get("1.0", "end-1c")
                     print(ROUTNUM)
@@ -288,21 +296,29 @@ class MainFrame(tk.Tk):
                         cur.execute(get_curr_bal)
                         x = loop(cur.fetchall())
                         newVal = x-Decimal(INPUT)
-                        update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
-                        cur.execute(update_val)
-                        conn.commit()
-                        trans_id = get_trans_id()
-                        desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
-                        print('todays date:', today)
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) + "');"
-                        print(update_transaction_comm)
-                        cur.execute(update_transaction_comm)
-                        success_msg.pack()
-                        success_msg.place(x=275,y=200)
-                        success_msg.config(text="Successfully transfered money!")
-                        conn.commit()
-                        cur.close()
-                        conn.close()
+                        get_type = "SELECT type FROM Account WHERE number = " + "'" + clicked.get() + "';"
+                        cur.execute(get_type)
+                        accType = cur.fetchall()
+                        if str(accType[0][0]) == 'Savings' and newVal < 0:
+                            incor_inp.pack()
+                            incor_inp.place(x=200, y=200)
+                            incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
+                        else:
+                            update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                            cur.execute(update_val)
+                            conn.commit()
+                            trans_id = get_trans_id()
+                            desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
+                            print('todays date:', today)
+                            update_transaction_comm = "INSERT INTO Transactions VALUES('External Transfer', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) + "');"
+                            print(update_transaction_comm)
+                            cur.execute(update_transaction_comm)
+                            success_msg.pack()
+                            success_msg.place(x=275,y=200)
+                            success_msg.config(text="Successfully transfered money!")
+                            conn.commit()
+                            cur.close()
+                            conn.close()
                 else:
                     print('withdraw/deposite')
                     conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
@@ -310,31 +326,44 @@ class MainFrame(tk.Tk):
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
                     x = loop(cur.fetchall())
-                    if transfer == 'withdrawl':
+                    get_type = "SELECT type FROM Account WHERE number = " + "'" + clicked.get() + "';"
+                    cur.execute(get_type)
+                    accType = cur.fetchall()
+                    print('type: ', accType[0][0])
+                    print('trans: ', transfer)
+                    print('x: ', x)
+                    if transfer == 'withdraw':
                         newVal = x-Decimal(INPUT)
                     else:
                         newVal = x+Decimal(INPUT)
-                    update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
-                    cur.execute(update_val)
-                    conn.commit()
-                    trans_id = get_trans_id()
-                    desc = "'" + transfer + "'"
-                    print('todays date:', today)
-                    if transfer == 'deposite':
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null, '" + str(today) +  "');"
+                    print('str acc:  ',str(accType[0][0]))
+                    print('newval: ', newVal)
+                    if str(accType[0][0]) == 'Savings' and newVal < 0:
+                        incor_inp.pack()
+                        incor_inp.place(x=200, y=200)
+                        incor_inp.config(text='Error, this action would result in a negative balance in a savings account')
                     else:
-                        update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) +  "');"
-                    print(update_transaction_comm)
-                    cur.execute(update_transaction_comm)
-                    success_msg.pack()
-                    success_msg.place(x=265,y=200)
-                    if transfer == 'withdrawl':
-                        success_msg.config(text="Withdrawl successful!")
-                    else:
-                        success_msg.config(text='Deopsite Successful!')
-                    conn.commit()
-                    cur.close()
-                    conn.close()
+                        update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
+                        cur.execute(update_val)
+                        conn.commit()
+                        trans_id = get_trans_id()
+                        desc = "'" + transfer + "'"
+                        print('todays date:', today)
+                        if transfer == 'deposite':
+                            update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null, '" + str(today) +  "');"
+                        else:
+                            update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) +  "');"
+                        print(update_transaction_comm)
+                        cur.execute(update_transaction_comm)
+                        success_msg.pack()
+                        success_msg.place(x=265,y=200)
+                        if transfer == 'withdraw':
+                            success_msg.config(text="Withdrawl successful!")
+                        else:
+                            success_msg.config(text='Deopsite Successful!')
+                        conn.commit()
+                        cur.close()
+                        conn.close()
         transferAccOpt = []
         if loggedInAcc == 'tell':
             acc = self.get_teller_acc()
