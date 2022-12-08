@@ -3,6 +3,8 @@ import psycopg2
 from decimal import Decimal
 import random
 from datetime import date
+from datetime import datetime
+
 
 #        conn = psycopg2.connect("dbname=bank user=bob password=password123")
 #   cur = conn.cursor()
@@ -161,6 +163,7 @@ class MainFrame(tk.Tk):
 
             conf_btn = tk.Button(self, text='Delete', command= lambda: exec_delete())
             conf_btn.pack()
+                
         
     def add_fees(self, type):
         incor_inp = tk.Label(self, text='', fg="red")
@@ -312,7 +315,71 @@ class MainFrame(tk.Tk):
             conn.commit()
             cur.close()
             conn.close()
-    
+    def pending_transactions(self, loggedInAS, loggedInName):
+        def get_statement():
+            con = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = con.cursor()
+            mon = datetime.now().month
+            yar = datetime.now().year
+            get_statement = "SELECT * FROM transactions WHERE ((depositaccountid='" + clicked.get() + "' OR withdrawalaccountid='" + clicked.get() + "') AND (EXTRACT(MONTH FROM DATE) = " + str(mon) + " AND EXTRACT(YEAR FROM DATE) = " + str(yar) + "));"
+            cur.execute(get_statement)
+            sttmnt = cur.fetchall()
+            txt = str(sttmnt)
+            transactions = tk.Label(self, text=txt)
+            transactions.pack()
+        label = tk.Label(self, text="Choose Account")
+        label.pack()
+        if loggedInAS == 'Customer':
+            acc = self.get_cust_acc(loggedInName)
+        else:
+            acc = self.get_teller_acc()
+        options = []
+        for i in acc:
+            for x in i:
+                options.append(x)
+        clicked = tk.StringVar()
+        clicked.set(options[0])
+        drop = tk.OptionMenu(self, clicked, *options)
+        drop.pack()
+        confirm_button = tk.Button(self, text="Confirm", command=lambda:get_statement())
+        confirm_button.pack()
+    def choose_sta(self, loggedInAS, loggedInName):
+        def get_statement():
+            con = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = con.cursor()
+            mon = datetime.now().month
+            yar = datetime.now().year
+            if mon == 1:
+                yar = yar - 1
+                mon = 12
+            else:
+                mon = mon - 1
+            get_statement = "SELECT * FROM transactions WHERE ((depositaccountid='" + clicked.get() + "' OR withdrawalaccountid='" + clicked.get() + "') AND (EXTRACT(MONTH FROM DATE) = " + str(mon) + " AND EXTRACT(YEAR FROM DATE) = " + str(yar) + "));"
+            cur.execute(get_statement)
+            sttmnt = cur.fetchall()
+            txt = str(sttmnt)
+            transactions = tk.Label(self, text=txt)
+            transactions.pack()
+        label = tk.Label(self, text="Choose Account")
+        label.pack()
+        if loggedInAS == 'Customer':
+            acc = self.get_cust_acc(loggedInName)
+        else:
+            acc = self.get_teller_acc()
+        options = []
+        for i in acc:
+            for x in i:
+                options.append(x)
+        clicked = tk.StringVar()
+        clicked.set(options[0])
+        drop = tk.OptionMenu(self, clicked, *options)
+        drop.pack()
+        confirm_button = tk.Button(self, text="Confirm", command=lambda:get_statement())
+        confirm_button.pack()
+
+                                    
+                                    
+
     def choose_acc(self, transfer, loggedInAcc, loggedInAs):
         today = date.today()
         def loop(a):
@@ -382,7 +449,7 @@ class MainFrame(tk.Tk):
                         success_msg.config(text="Successfully transfered money!")
                         conn.commit()
                         cur.close()
-                        conn.close()
+                        conn.close()                            
                 elif transfer == 'external':
                     ROUTNUM = routing_num.get("1.0", "end-1c")
                     print(ROUTNUM)
@@ -425,7 +492,7 @@ class MainFrame(tk.Tk):
                             cur.close()
                             conn.close()
                 else:
-                    print('withdraw/deposite')
+                    print('withdraw/deposit')
                     conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
@@ -458,7 +525,7 @@ class MainFrame(tk.Tk):
                         trans_id = get_trans_id()
                         desc = "'" + transfer + "'"
                         print('todays date:', today)
-                        if transfer == 'deposite':
+                        if transfer == 'deposit':
                             update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", " + clicked.get() + ",null, '" + str(today) +  "');"
                         else:
                             update_transaction_comm = "INSERT INTO Transactions VALUES('" + transfer + "', " + str(INPUT) + ", " + desc + ", " + trans_id + ", null, " + clicked.get() + ", '" + str(today) +  "');"
@@ -674,7 +741,7 @@ class TellerLogin(tk.Frame):
             def hide_all(transaction):
                 label.pack_forget()
                 withdraw_btn.pack_forget()
-                deposite_btn.pack_forget()
+                deposit_btn.pack_forget()
                 transfer_btn.pack_forget()
                 external_transfer_btn.pack_forget()
                 controller.choose_acc(transaction, 'tell', loggedIn)      
@@ -685,8 +752,8 @@ class TellerLogin(tk.Frame):
             withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
             withdraw_btn.pack()
 
-            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
-            deposite_btn.pack()
+            deposit_btn = tk.Button(self, text='Make Deposit', command=lambda: hide_all('deposit'))
+            deposit_btn.pack()
 
             transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
             transfer_btn.pack()
@@ -741,7 +808,21 @@ class CustomerLogin(tk.Frame):
             def to_transaction():
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
+                to_statement_btn.pack_forget()
                 choose_transaction(loggedInAS)
+            def to_statement():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                controller.choose_sta('Customer', loggedInAS)
+            def to_pending_transactions():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
+                controller.pending_transactions('Customer', loggedInAS)
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -751,15 +832,23 @@ class CustomerLogin(tk.Frame):
 
             to_transaction_btn = tk.Button(self, text = "Make Transaction", command=to_transaction)
             to_transaction_btn.pack()
+            
+            to_statement_btn = tk.Button(self, text = "View Statement", command=to_statement)
+            to_statement_btn.pack()
 
+            to_pending_transactions_btn = tk.Button(self, text = "View Pending Transactions", command=to_pending_transactions)
+            to_pending_transactions_btn.pack()
+            
             btn= tk.Button(self, text="Logout", command=back)
             btn.pack(side="bottom")
         ###TODO Refactor the bellow functions/pages into main frame so that it can be used by teller and customer
+
+                        
         def choose_transaction(loggedIn):
             def hide_all(transaction):
                 label.pack_forget()
                 withdraw_btn.pack_forget()
-                deposite_btn.pack_forget()
+                deposit_btn.pack_forget()
                 transfer_btn.pack_forget()
                 external_transfer_btn.pack_forget()
                 controller.choose_acc(transaction, 'cust', loggedIn)      
@@ -770,8 +859,8 @@ class CustomerLogin(tk.Frame):
             withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
             withdraw_btn.pack()
 
-            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
-            deposite_btn.pack()
+            deposit_btn = tk.Button(self, text='Make Deposit', command=lambda: hide_all('deposit'))
+            deposit_btn.pack()
 
             transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
             transfer_btn.pack()
@@ -829,19 +918,41 @@ class ManagerLogin(tk.Frame,):
                 to_analytics_btn.pack_forget()
                 acc_man_btn.pack_forget()
                 to_transaction_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
                 choose_analytics(loggedInAS)
             def to_acc_man():
                 label2.pack_forget()
                 acc_man_btn.pack_forget()
                 to_analytics_btn.pack_forget()
                 to_transaction_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
                 choose_acc_man()
             def to_transaction():
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
                 to_analytics_btn.pack_forget()
                 acc_man_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
                 choose_transaction(loggedInAS)
+            def to_statement():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                to_analytics_btn.pack_forget()
+                acc_man_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
+                controller.choose_sta('Manager', loggedInAS)
+            def to_pending_transactions():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                to_analytics_btn.pack_forget()
+                acc_man_btn.pack_forget()
+                to_statement_btn.pack_forget()
+                to_pending_transactions_btn.pack_forget()
+                controller.pending_transactions('Manager', loggedInAS)
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -857,6 +968,12 @@ class ManagerLogin(tk.Frame,):
 
             to_transaction_btn = tk.Button(self, text = "Make Transaction", command=to_transaction)
             to_transaction_btn.pack()
+            
+            to_statement_btn = tk.Button(self, text = "View Statement", command=to_statement)
+            to_statement_btn.pack()
+            
+            to_pending_transactions_btn = tk.Button(self, text = "View Pending Transactions", command=to_pending_transactions)
+            to_pending_transactions_btn.pack()
             
             btn= tk.Button(self, text="Logout", command=back)
             btn.pack(side="bottom")
@@ -923,23 +1040,24 @@ class ManagerLogin(tk.Frame,):
             
             leastvaluable_btn = tk.Button(self, text='Least valuable account', command=lambda: analyt('leastvaluable',manager))
             leastvaluable_btn.pack()
+            
         def choose_transaction(loggedIn):
             def hide_all(transaction):
                 label.pack_forget()
                 withdraw_btn.pack_forget()
-                deposite_btn.pack_forget()
+                deposit_btn.pack_forget()
                 transfer_btn.pack_forget()
                 external_transfer_btn.pack_forget()
                 controller.choose_acc(transaction, 'tell', loggedIn)      
-
+    
             label = tk.Label(self, text='What kind of transaction would you like to make?')
             label.pack()
             
             withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
             withdraw_btn.pack()
 
-            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
-            deposite_btn.pack()
+            deposit_btn = tk.Button(self, text='Make Deposit', command=lambda: hide_all('deposit'))
+            deposit_btn.pack()
 
             transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
             transfer_btn.pack()
