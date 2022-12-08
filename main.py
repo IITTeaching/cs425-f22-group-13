@@ -279,6 +279,10 @@ class MainFrame(tk.Tk):
                         update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
                         cur.execute(update_val)
                         conn.commit()
+                        if newVal < 0:
+                            update_overDraft = "UPDATE Account SET overdraft_fees=5 WHERE number = '" + clicked.get() + "';"
+                            cur.execute(update_overDraft)
+                            conn.commit()
                         get_curr_bal_2 = "SELECT balance FROM Account WHERE number = " + "'" + clicked1.get() + "'"
                         cur.execute(get_curr_bal_2)
                         y = loop(cur.fetchall())
@@ -323,6 +327,10 @@ class MainFrame(tk.Tk):
                             update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
                             cur.execute(update_val)
                             conn.commit()
+                            if newVal < 0:
+                                update_overDraft = "UPDATE Account SET overdraft_fees=5 WHERE number = '" + clicked.get() + "';"
+                                cur.execute(update_overDraft)
+                                conn.commit()
                             trans_id = get_trans_id()
                             desc = "'Trasnfered to external account " + str(ROUTNUM) + "'"
                             print('todays date:', today)
@@ -362,6 +370,10 @@ class MainFrame(tk.Tk):
                         update_val = "UPDATE Account SET balance=" + str(newVal) + " WHERE number = '" + clicked.get() + "';"
                         cur.execute(update_val)
                         conn.commit()
+                        if newVal < 0:
+                            update_overDraft = "UPDATE Account SET overdraft_fees=5 WHERE number = '" + clicked.get() + "';"
+                            cur.execute(update_overDraft)
+                            conn.commit()
                         trans_id = get_trans_id()
                         desc = "'" + transfer + "'"
                         print('todays date:', today)
@@ -686,7 +698,7 @@ class CustomerLogin(tk.Frame):
             external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
             external_transfer_btn.pack()
             
-class ManagerLogin(tk.Frame):
+class ManagerLogin(tk.Frame,):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         logged_in_as = ""
@@ -722,6 +734,7 @@ class ManagerLogin(tk.Frame):
         btn = tk.Button( self , text = "Login" , command = show )
         btn.pack()
 
+
         def logged_in(logged_in_text, loggedInAS):
             #this method is used to "logout", the easiest way I could think to do it was to delete the current tkinter instance and create a new one
             def back():
@@ -732,14 +745,21 @@ class ManagerLogin(tk.Frame):
                 controller.__init__()
             def to_analytics():
                 label2.pack_forget()
-                to_transaction_btn.pack_forget()
+                to_analytics_btn.pack_forget()
                 acc_man_btn.pack_forget()
+                to_transaction_btn.pack_forget()
                 choose_analytics(loggedInAS)
             def to_acc_man():
                 label2.pack_forget()
                 acc_man_btn.pack_forget()
-                to_transaction_btn.pack_forget()
+                to_analytics_btn.pack_forget()
                 choose_acc_man()
+            def to_transaction():
+                label2.pack_forget()
+                to_transaction_btn.pack_forget()
+                to_analytics_btn.pack_forget()
+                acc_man_btn.pack_forget()
+                choose_transaction(loggedInAS)
             print('in logged in')
             print(logged_in_text)
             label = tk.Label(self, text = logged_in_text)
@@ -750,7 +770,10 @@ class ManagerLogin(tk.Frame):
             acc_man_btn = tk.Button(self, text = 'Account Management', command=to_acc_man)
             acc_man_btn.pack()
 
-            to_transaction_btn = tk.Button(self, text = "Analytics", command=to_analytics)
+            to_analytics_btn = tk.Button(self, text = "Analytics", command=to_analytics)
+            to_analytics_btn.pack()
+
+            to_transaction_btn = tk.Button(self, text = "Make Transaction", command=to_transaction)
             to_transaction_btn.pack()
             
             btn= tk.Button(self, text="Logout", command=back)
@@ -796,6 +819,29 @@ class ManagerLogin(tk.Frame):
             
             leastvaluable_btn = tk.Button(self, text='Least valuable account', command=lambda: analyt('leastvaluable',manager))
             leastvaluable_btn.pack()
+        def choose_transaction(loggedIn):
+            def hide_all(transaction):
+                label.pack_forget()
+                withdraw_btn.pack_forget()
+                deposite_btn.pack_forget()
+                transfer_btn.pack_forget()
+                external_transfer_btn.pack_forget()
+                controller.choose_acc(transaction, 'tell', loggedIn)      
+
+            label = tk.Label(self, text='What kind of transaction would you like to make?')
+            label.pack()
+            
+            withdraw_btn = tk.Button(self, text='Make Withdrawl', command=lambda: hide_all('withdraw'))
+            withdraw_btn.pack()
+
+            deposite_btn = tk.Button(self, text='Make Deposite', command=lambda: hide_all('deposite'))
+            deposite_btn.pack()
+
+            transfer_btn = tk.Button(self, text='Transfer', command=lambda: hide_all('transfer'))
+            transfer_btn.pack()
+
+            external_transfer_btn = tk.Button(self, text='External Transfer', command=lambda: hide_all('external'))
+            external_transfer_btn.pack()
 
 
 
