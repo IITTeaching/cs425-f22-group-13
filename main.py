@@ -163,7 +163,7 @@ class MainFrame(tk.Tk):
             conf_btn.pack()
         
     
-    def choose_ana(self, analytic):
+    def choose_ana(self, analytic, manager):
         success_msg = tk.Label(self, text='',fg="green")
         if analytic == 'networth':
             conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
@@ -214,7 +214,23 @@ class MainFrame(tk.Tk):
             conn.commit()
             cur.close()
             conn.close()
-    
+        elif analytic == 'branch':
+            lst = []
+            conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+            cur = conn.cursor()
+            get_menn = "SELECT AVG(balance) AS mean FROM (SELECT DISTINCT ON (account.number) NAME, balance FROM (SELECT NAME,NUMBER FROM (SELECT NAME, NUMBER, type FROM (SELECT employees.name, branch, customers.ssn, employees.type FROM employees LEFT OUTER JOIN customers ON employees.branch=customers.homebranch)one RIGHT OUTER JOIN owns ON one.ssn=owns.ssn) AS two WHERE type='Manager') AS three LEFT OUTER JOIN account ON three.number=account.number) AS four WHERE NAME='" + manager + "';" 
+            cur.execute(get_menn)
+            lst.append(cur.fetchall())         
+            get_semm = "SELECT SUM(balance) AS sum FROM (SELECT DISTINCT ON (account.number) NAME, balance FROM (SELECT NAME,NUMBER FROM (SELECT NAME, NUMBER, type FROM (SELECT employees.name, branch, customers.ssn, employees.type FROM employees LEFT OUTER JOIN customers ON employees.branch=customers.homebranch)one RIGHT OUTER JOIN owns ON one.ssn=owns.ssn) AS two WHERE type='Manager') AS three LEFT OUTER JOIN account ON three.number=account.number) AS four WHERE NAME='" + manager + "';" 
+            cur.execute(get_semm)
+            lst.append(cur.fetchall())
+            print(lst)     
+            success_msg.pack()
+            success_msg.place(x=200, y=200)
+            success_msg.config(text='Mean: ' + str(lst[0][0][0]) + ' Sum: ' + str(lst[1][0][0]))
+            conn.commit()
+            cur.close()
+            conn.close()
     
     def choose_acc(self, transfer, loggedInAcc, loggedInAs):
         today = date.today()
@@ -681,7 +697,7 @@ class ManagerLogin(tk.Frame):
             print(clicked.get())
             logged_in_text = "Welcome Back " + clicked.get()
             print(logged_in_text)
-            logged_in(logged_in_text)
+            logged_in(logged_in_text, clicked.get())
 
         # Dropdown menu options
         print('in manager page')            
@@ -706,7 +722,7 @@ class ManagerLogin(tk.Frame):
         btn = tk.Button( self , text = "Login" , command = show )
         btn.pack()
 
-        def logged_in(logged_in_text):
+        def logged_in(logged_in_text, loggedInAS):
             #this method is used to "logout", the easiest way I could think to do it was to delete the current tkinter instance and create a new one
             def back():
                 label.pack_forget()
@@ -717,7 +733,8 @@ class ManagerLogin(tk.Frame):
             def to_analytics():
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
-                choose_analytics()
+                acc_man_btn.pack_forget()
+                choose_analytics(loggedInAS)
             def to_acc_man():
                 label2.pack_forget()
                 acc_man_btn.pack_forget()
@@ -752,17 +769,21 @@ class ManagerLogin(tk.Frame):
 
             delete_btn = tk.Button(self, text = 'Delete account', command=lambda: acc_man_exec('delete'))
             delete_btn.pack()
-        def choose_analytics():
-            def analyt(analytic):
+        def choose_analytics(manager):
+            def analyt(analytic,manager):
                 label.pack_forget()
                 networth_btn.pack_forget()
                 mean_btn.pack_forget()
                 mostvaluable_btn.pack_forget()
                 leastvaluable_btn.pack_forget()
-                controller.choose_ana(analytic)      
+                data_btn.pack_forget()
+                controller.choose_ana(analytic,manager)      
 
             label = tk.Label(self, text='What kind of data would you like to view?')
             label.pack()
+            
+            data_btn = tk.Button(self, text='View data for my branch', command=lambda: analyt('branch',manager))
+            data_btn.pack()
             
             networth_btn = tk.Button(self, text='Total net worth of all customers', command=lambda: analyt('networth'))
             networth_btn.pack()
