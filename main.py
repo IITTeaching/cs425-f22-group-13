@@ -325,8 +325,11 @@ class MainFrame(tk.Tk):
             cur.execute(get_statement)
             sttmnt = cur.fetchall()
             txt = str(sttmnt)
-            transactions = tk.Label(self, text=txt)
-            transactions.pack()
+            # transactions = tk.Label(self, text=txt)
+            for i in sttmnt:
+                transactions = tk.Label(self, text="Type: " + str(i[0]) + " Amount: " + str(i[1]) + " Description: " + str(i[2]) + " ID: " + str(i[3]) + " Deposit Account ID: " + str(i[4]) + " Withdrawal Account ID: " + str(i[5]) + " Date: " + str(i[6]))
+                transactions.pack()
+            # transactions.pack()
         label = tk.Label(self, text="Choose Account")
         label.pack()
         if loggedInAS == 'Customer':
@@ -358,8 +361,11 @@ class MainFrame(tk.Tk):
             cur.execute(get_statement)
             sttmnt = cur.fetchall()
             txt = str(sttmnt)
-            transactions = tk.Label(self, text=txt)
-            transactions.pack()
+            for i in sttmnt:
+                transactions = tk.Label(self, text="Type: " + str(i[0]) + " Amount: " + str(i[1]) + " Description: " + str(i[2]) + " ID: " + str(i[3]) + " Deposit Account ID: " + str(i[4]) + " Withdrawal Account ID: " + str(i[5]) + " Date: " + str(i[6]))
+                transactions.pack()
+            # transactions = tk.Label(self, text=txt)
+            # transactions.pack()
         label = tk.Label(self, text="Choose Account")
         label.pack()
         if loggedInAS == 'Customer':
