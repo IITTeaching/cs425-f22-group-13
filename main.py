@@ -165,11 +165,10 @@ class MainFrame(tk.Tk):
             conf_btn.pack()
                 
         
-    def add_fees(self, type):
+    def add_fees(self, type, loggedInAs):
         incor_inp = tk.Label(self, text='', fg="red")
         success_msg = tk.Label(self, text='',fg="green")        
         def add_fees_sql():
-            cont = True
             success_msg.pack_forget()
             incor_inp.pack_forget()
             INPUT = inputtxt.get("1.0", "end-1c")
@@ -179,61 +178,52 @@ class MainFrame(tk.Tk):
             else:
                 conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
                 cur = conn.cursor()
+                accNum = []
+                #SELECT number FROM (owns NATURAL JOIN (SELECT ssn FROM customers WHERE homebranch = (SELECT branch FROM employees WHERE name = 'Gomez')) as q1);
+                acc_in_branch = "SELECT number FROM (owns NATURAL JOIN (SELECT ssn FROM customers WHERE homebranch = (SELECT branch FROM employees WHERE name = '" + loggedInAs + "')) as q1);"
+                cur.execute(acc_in_branch)
+                for i in cur.fetchall():
+                    for x in i:
+                        accNum.append(x)
+                print('nums, ', accNum)
                 if type == 'interest':
-                    check_type = "SELECT type FROM Account WHERE number = '" + clicked.get() + "';"
-                    cur.execute(check_type)
-                    accT = cur.fetchall()
-                    if str(accT[0][0]) == 'Checkings':
-                        incor_inp.config(text='Error, Checking accounts cannot have interest')
-                        incor_inp.pack()
-                        cont = False
-                    else:
-                        print('adding interest')
-                        update_fees = "UPDATE Account SET interest=" + INPUT + " WHERE number = '" + clicked.get() + "';"
-                        print(update_fees)
-                        cont = True
+                    for nums in accNum:
+                        check_type = "SELECT type FROM Account WHERE number = '" + nums + "';"
+                        cur.execute(check_type)
+                        accT = cur.fetchall()
+                        print('type ', accT)
+                        if str(accT[0][0]) == 'Checkings':
+                            print('not adding interest')
+                        else:
+                            print('adding interest')
+                            update_fees = "UPDATE Account SET interest=" + INPUT + " WHERE number = '" + nums + "';"
+                            print(update_fees)
+                            cur.execute(update_fees)
+                            conn.commit()
                 elif type == 'overdraft fees':
-                    check_type = "SELECT type FROM Account WHERE number = '" + clicked.get() + "';"
-                    cur.execute(check_type)
-                    accT = cur.fetchall()
-                    if str(accT[0][0]) == 'Savings':
-                        incor_inp.config(text='Error, Savings accounts cannot have overdraft fees')
-                        incor_inp.pack()
-                        cont = False
-                    else:                        
-                        print('adding overdraft')
-                        update_fees = "UPDATE Account SET overdraft_fees=" + INPUT + " WHERE number = '" + clicked.get() + "';"
-                        print(update_fees)
-                        cont = True
+                    for nums in accNum:
+                        check_type = "SELECT type FROM Account WHERE number = '" + nums + "';"
+                        cur.execute(check_type)
+                        accT = cur.fetchall()
+                        if str(accT[0][0]) == 'Savings':
+                            print('not adding overdraft fees to savings acc')
+                        else:                        
+                            print('adding overdraft')
+                            update_fees = "UPDATE Account SET overdraft_fees=" + INPUT + " WHERE number = '" + nums + "';"
+                            print(update_fees)
+                            cur.execute(update_fees)
+                            conn.commit()
                 else:
                     print('adding acc fees')
-                    update_fees = "UPDATE Account SET account_fees=" + INPUT + " WHERE number = '" + clicked.get() + "';"
-                    print(update_fees)
-                print(cont)
-                if cont == True:
-                    cur.execute(update_fees)
-                    conn.commit()
-                    succ_txt = 'Successfully added ' + type
-                    success_msg.config(text=succ_txt)
-                    success_msg.pack()
+                    for nums in accNum:
+                        update_fees = "UPDATE Account SET account_fees=" + INPUT + " WHERE number = '" + nums + "';"
+                        print(update_fees)
+                        cur.execute(update_fees)
+                        conn.commit()
+                succ_txt = 'Successfully added ' + type
+                success_msg.config(text=succ_txt)
+                success_msg.pack()
         print('in add fees')
-        txt = 'Which account would you like to add ' + type + ' to'
-        label = tk.Label(self, text=txt)
-        label.pack()
-        accs = self.get_teller_acc()
-        print(accs)
-        options = []
-        for i in accs:
-            for x in i:
-                print(x)
-                options.append(x)
-                    # datatype of menu text
-        clicked = tk.StringVar()
-            # initial menu text
-        clicked.set(options[0])
-                    # Create Dropdown menu
-        drop = tk.OptionMenu( self , clicked , *options )
-        drop.pack()
         txt2 = 'How much ' + type + ' would you like to add'
         label2 = tk.Label(self, text=txt2)
         label2.pack()
@@ -932,7 +922,7 @@ class ManagerLogin(tk.Frame,):
                 to_transaction_btn.pack_forget()
                 to_statement_btn.pack_forget()
                 to_pending_transactions_btn.pack_forget()
-                choose_acc_man()
+                choose_acc_man(loggedInAS)
             def to_transaction():
                 label2.pack_forget()
                 to_transaction_btn.pack_forget()
@@ -981,7 +971,7 @@ class ManagerLogin(tk.Frame,):
             
             btn= tk.Button(self, text="Logout", command=back)
             btn.pack(side="bottom")
-        def choose_acc_man():
+        def choose_acc_man(loggedInAs):
             def acc_man_exec(action):
                 label.pack_forget()
                 create_btn.pack_forget()
@@ -997,7 +987,7 @@ class ManagerLogin(tk.Frame,):
                 add_int.pack_forget()
                 add_overdraft.pack_forget()
                 add_acc_fees.pack_forget()
-                controller.add_fees(type)
+                controller.add_fees(type, loggedInAs)
 
 
             label = tk.Label(self, text='Which action would you like to take?')
