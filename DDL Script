@@ -111,11 +111,17 @@ INSERT INTO Owns VALUES ('987654321', '1082338342');
 INSERT INTO Owns VALUES ('987654321', '3456384344');
 INSERT INTO Owns VALUES ('135798642', '2398344343');
 
-INSERT INTO Transactions VALUES ('Deposit', '500.00', 'Check from David Blythe.', '93484830230128374698', '8463293749', NULL, '2010-01-01');
-INSERT INTO Transactions VALUES ('Withdrawal', '4.77', 'Sandwhich from SandwhichShop.', '84343294034302942393', NULL, '1082338342', '2020-05-11');
-INSERT INTO Transactions VALUES ('Transfer', '100.00', 'Scheduled transfer.', '34689029327932477238', '1082338342', '3456384344', '2020-06-06');
-INSERT INTO Transactions VALUES ('External Transfer', '39.23', 'Scheduled transfer.', '25123871849334939423', NULL, '4392342343', '2020-08-11');
-INSERT INTO Transactions VALUES ('Deposit', '20000.00', 'ATM deposit.', '44457823888876233002', '3456384344', NULL, '2021-12-13');
+INSERT INTO Transactions VALUES ('Deposit', '500.00', 'Check from David Blythe.', '93484830230128374698', '8463293749', NULL, '2022-11-01');
+INSERT INTO Transactions VALUES ('Withdrawal', '4.77', 'Sandwhich from SandwhichShop.', '84343294034302942393', NULL, '1082338342', '2022-11-11');
+INSERT INTO Transactions VALUES ('Transfer', '100.00', 'Scheduled transfer.', '34689029327932477238', '1082338342', '3456384344', '2022-11-06');
+INSERT INTO Transactions VALUES ('External Transfer', '39.23', 'Scheduled transfer.', '25123871849334939423', NULL, '4392342343', '2022-11-11');
+INSERT INTO Transactions VALUES ('Deposit', '20000.00', 'ATM deposit.', '44457823888876233002', '3456384344', NULL, '2022-11-13');
+INSERT INTO Transactions VALUES ('Deposit', '100', 'ATM deposit.', '44457823888876233003', '3456384344', NULL, '2022-12-13');
+INSERT INTO Transactions VALUES ('Withdrawal', '50.00', 'Groceries', '44457823888876233004', '1082338342', NULL, '2022-12-07');
+INSERT INTO Transactions VALUES ('Withdrawal', '10.00', 'Groceries', '44457823888876233005', '8463293749', NULL, '2022-12-07');
+INSERT INTO Transactions VALUES ('Withdrawal', '10.00', 'Groceries', '44457823888876233006', '4392342343', NULL, '2022-12-07');
+INSERT INTO Transactions VALUES ('Deposit', '100.00', 'ATM deposit', '44457823888876233007', '2398344343', NULL, '2022-12-07');
+
 
 
 CREATE role teller;
