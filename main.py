@@ -667,8 +667,6 @@ class EmployeePage(tk.Frame):
         to_teller = tk.Button(self, text="Teller", command=lambda: controller.up_frame("TellerLogin"))
         to_teller.pack()
 
-        to_loan = tk.Button(self, text="Loan Specialist")
-        to_loan.pack()
 
         to_manager = tk.Button(self, text="Manager", command=lambda: controller.up_frame("ManagerLogin"))
         to_manager.pack()
