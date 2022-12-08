@@ -15,7 +15,7 @@ class MainFrame(tk.Tk):
     cont = None
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("750x350")
+        self.geometry("1300x700")
 
         container = tk.Frame(self)
         container.pack(fill='both', expand=1)
