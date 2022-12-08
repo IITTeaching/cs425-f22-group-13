@@ -162,7 +162,88 @@ class MainFrame(tk.Tk):
             conf_btn = tk.Button(self, text='Delete', command= lambda: exec_delete())
             conf_btn.pack()
         
-    
+    def add_fees(self, type):
+        incor_inp = tk.Label(self, text='', fg="red")
+        success_msg = tk.Label(self, text='',fg="green")        
+        def add_fees_sql():
+            cont = True
+            success_msg.pack_forget()
+            incor_inp.pack_forget()
+            INPUT = inputtxt.get("1.0", "end-1c")
+            if(INPUT.isdecimal() == False):
+                incor_inp.pack()
+                incor_inp.config(text='Incorrect Input, please make sure you entered a number')
+            else:
+                conn = psycopg2.connect(user="bob",password="password123",host="127.0.0.1",port="5432",database="bank")
+                cur = conn.cursor()
+                if type == 'interest':
+                    check_type = "SELECT type FROM Account WHERE number = '" + clicked.get() + "';"
+                    cur.execute(check_type)
+                    accT = cur.fetchall()
+                    if str(accT[0][0]) == 'Checkings':
+                        incor_inp.config(text='Error, Checking accounts cannot have interest')
+                        incor_inp.pack()
+                        cont = False
+                    else:
+                        print('adding interest')
+                        update_fees = "UPDATE Account SET interest=" + INPUT + " WHERE number = '" + clicked.get() + "';"
+                        print(update_fees)
+                        cont = True
+                elif type == 'overdraft fees':
+                    check_type = "SELECT type FROM Account WHERE number = '" + clicked.get() + "';"
+                    cur.execute(check_type)
+                    accT = cur.fetchall()
+                    if str(accT[0][0]) == 'Savings':
+                        incor_inp.config(text='Error, Savings accounts cannot have overdraft fees')
+                        incor_inp.pack()
+                        cont = False
+                    else:                        
+                        print('adding overdraft')
+                        update_fees = "UPDATE Account SET overdraft_fees=" + INPUT + " WHERE number = '" + clicked.get() + "';"
+                        print(update_fees)
+                        cont = True
+                else:
+                    print('adding acc fees')
+                    update_fees = "UPDATE Account SET account_fees=" + INPUT + " WHERE number = '" + clicked.get() + "';"
+                    print(update_fees)
+                print(cont)
+                if cont == True:
+                    cur.execute(update_fees)
+                    conn.commit()
+                    succ_txt = 'Successfully added ' + type
+                    success_msg.config(text=succ_txt)
+                    success_msg.pack()
+        print('in add fees')
+        txt = 'Which account would you like to add ' + type + ' to'
+        label = tk.Label(self, text=txt)
+        label.pack()
+        accs = self.get_teller_acc()
+        print(accs)
+        options = []
+        for i in accs:
+            for x in i:
+                print(x)
+                options.append(x)
+                    # datatype of menu text
+        clicked = tk.StringVar()
+            # initial menu text
+        clicked.set(options[0])
+                    # Create Dropdown menu
+        drop = tk.OptionMenu( self , clicked , *options )
+        drop.pack()
+        txt2 = 'How much ' + type + ' would you like to add'
+        label2 = tk.Label(self, text=txt2)
+        label2.pack()
+        inputtxt = tk.Text(self, height = 1,
+            width = 10,
+            bg = "white",
+            fg="red")
+        inputtxt.pack()
+        confirm_btn = tk.Button(self, text='Confirm', command=lambda: add_fees_sql())
+        confirm_btn.pack()
+
+
+
     def choose_ana(self, analytic, manager):
         success_msg = tk.Label(self, text='',fg="green")
         if analytic == 'networth':
@@ -784,7 +865,20 @@ class ManagerLogin(tk.Frame,):
                 label.pack_forget()
                 create_btn.pack_forget()
                 delete_btn.pack_forget()
+                add_int.pack_forget()
+                add_overdraft.pack_forget()
+                add_acc_fees.pack_forget()
                 controller.manager_acc_man(action)
+            def add_fee(type):
+                label.pack_forget()
+                create_btn.pack_forget()
+                delete_btn.pack_forget()
+                add_int.pack_forget()
+                add_overdraft.pack_forget()
+                add_acc_fees.pack_forget()
+                controller.add_fees(type)
+
+
             label = tk.Label(self, text='Which action would you like to take?')
             label.pack()
 
@@ -793,6 +887,15 @@ class ManagerLogin(tk.Frame,):
 
             delete_btn = tk.Button(self, text = 'Delete account', command=lambda: acc_man_exec('delete'))
             delete_btn.pack()
+
+            add_int = tk.Button(self, text='Add interest to an account', command=lambda: add_fee('interest'))
+            add_int.pack()
+
+            add_overdraft = tk.Button(self, text='Add overdraft fees to an account', command=lambda: add_fee('overdraft fees'))
+            add_overdraft.pack()
+
+            add_acc_fees = tk.Button(self, text='Add account fees to an account', command=lambda: add_fee('account fees'))
+            add_acc_fees.pack()           
         def choose_analytics(manager):
             def analyt(analytic,manager):
                 label.pack_forget()
