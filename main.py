@@ -753,6 +753,7 @@ class ManagerLogin(tk.Frame,):
                 label2.pack_forget()
                 acc_man_btn.pack_forget()
                 to_analytics_btn.pack_forget()
+                to_transaction_btn.pack_forget()
                 choose_acc_man()
             def to_transaction():
                 label2.pack_forget()
