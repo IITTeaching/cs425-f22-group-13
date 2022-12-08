@@ -58,7 +58,7 @@ class MainFrame(tk.Tk):
     
 
     def get_cust_acc(self, name):
-        conn = psycopg2.connect("dbname=bank user=sam password=password789")
+        conn = psycopg2.connect(user="sam",password="password789",host="127.0.0.1",port="5432",database="bank")
         cur = conn.cursor()
         cur.execute("SELECT number FROM (SELECT * FROM (SELECT * FROM owns NATURAL JOIN customers) as sub1 WHERE name = '" + name +  "') as sub2;")
         accounts = cur.fetchall()
@@ -305,7 +305,7 @@ class MainFrame(tk.Tk):
                         conn.close()
                 else:
                     print('withdraw/deposite')
-                    conn = psycopg2.connect("dbname=bank user=john password=password456")
+                    conn = psycopg2.connect(user="john",password="password456",host="127.0.0.1",port="5432",database="bank")
                     cur = conn.cursor()
                     get_curr_bal = "SELECT balance FROM Account WHERE number = " + "'" + clicked.get() + "'"
                     cur.execute(get_curr_bal)
